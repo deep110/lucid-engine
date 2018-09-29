@@ -9,6 +9,7 @@ public class Vector2 {
     public float x, y;
 
     public Vector2() {
+        set(0, 0);
     }
 
     public Vector2(float x, float y) {

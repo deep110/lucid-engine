@@ -43,7 +43,7 @@ public class TestScene extends Scene {
         }
 
         if (input.mouseUp[MouseEvent.BUTTON1]) {
-            addCollider(new Circle(new Vector2(input.mouseX, input.mouseY), 5));
+            addCollider(new Circle(new Vector2(input.mouseX, input.mouseY), 20));
         }
 
 //        if (input.keyDown[KeyEvent.VK_SHIFT]) {
