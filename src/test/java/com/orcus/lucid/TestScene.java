@@ -2,11 +2,17 @@ package com.orcus.lucid;
 
 import com.orcus.lucid.render.Scene;
 import com.orcus.lucid.render.input.GameInput;
+import com.orcus.lucid.util.Vector2;
+
+import java.awt.event.KeyEvent;
 
 /**
  * @author Deepankar Agrawal
  */
 public class TestScene extends Scene {
+
+    private boolean playing = true;
+    private Vector2 temp;
 
     TestScene(int width, int height) {
         super(width, height);
@@ -14,7 +20,7 @@ public class TestScene extends Scene {
 
     @Override
     public void start() {
-        //        impulse = new ImpulseScene(ImpulseMath.DT, 10);
+//        impulse = new ImpulseScene(ImpulseMath.DT, 10);
 //
 //        Body b = null;
 //
@@ -30,10 +36,12 @@ public class TestScene extends Scene {
 
     @Override
     public void update(GameInput input, float deltaTime) {
-        //        if (input.keyDown[KeyEvent.VK_ESCAPE]) {
-//            playing = false;
-//        }
-//
+        System.out.println(input.mouseX + "," + input.mouseY);
+
+        if (input.keyDown[KeyEvent.VK_ESCAPE]) {
+            playing = false;
+        }
+
 //        if (input.keyDown[KeyEvent.VK_SHIFT]) {
 //            if (input.mouseUp[MouseEvent.BUTTON1]) {
 //                float hw = ImpulseMath.random(10.0f, 30.0f);
@@ -65,7 +73,7 @@ public class TestScene extends Scene {
 //            }
 //        }
 
-        //        accumulator += state.seconds;
+//        accumulator += state.seconds;
 //
 //        if (accumulator >= impulse.dt) {
 //            impulse.step();
@@ -81,7 +89,7 @@ public class TestScene extends Scene {
 
     @Override
     public boolean isPlaying() {
-        return true;
+        return playing;
     }
 
 }

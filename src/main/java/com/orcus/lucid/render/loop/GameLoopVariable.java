@@ -31,7 +31,7 @@ public class GameLoopVariable implements GameLoop {
     public boolean onLoop(Scene scene, GameState state, GameInput input, Graphics2D gr) {
         state.setElapsed(Math.min(maximumElapsed, state.tick()));
 
-        scene.update(input, state.seconds);
+        scene.updateInternal(input, state.seconds);
         input.clear();
 
         if (!scene.isPlaying()) {

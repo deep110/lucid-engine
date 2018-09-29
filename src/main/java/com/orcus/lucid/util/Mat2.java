@@ -17,14 +17,15 @@
     Port to Java by Philip Diffenderfer http://magnos.org
 */
 
-package com.orcus.lucid.physics.struct;
+package com.orcus.lucid.util;
 
 public class Mat2 {
 
     public float m00, m01;
     public float m10, m11;
 
-    public Mat2() {}
+    public Mat2() {
+    }
 
     public Mat2(float radians) {
         set(radians);

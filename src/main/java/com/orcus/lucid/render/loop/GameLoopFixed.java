@@ -43,7 +43,7 @@ public class GameLoopFixed implements GameLoop {
         int updateCount = 0;
 
         while (updateTime >= updateRate && updateCount < maxUpdates) {
-            scene.update(input, state.seconds);
+            scene.updateInternal(input, state.seconds);
             input.clear();
 
             if (!scene.isPlaying()) {

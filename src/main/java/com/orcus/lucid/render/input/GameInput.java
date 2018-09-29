@@ -1,6 +1,5 @@
 package com.orcus.lucid.render.input;
 
-import com.orcus.lucid.render.GameState;
 import com.orcus.lucid.render.Scene;
 
 import javax.swing.event.MouseInputListener;

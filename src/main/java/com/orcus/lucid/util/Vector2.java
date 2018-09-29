@@ -1,4 +1,4 @@
-package com.orcus.lucid.render.util;
+package com.orcus.lucid.util;
 
 
 public class Vector2 {

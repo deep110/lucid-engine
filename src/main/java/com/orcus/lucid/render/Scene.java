@@ -3,7 +3,7 @@ package com.orcus.lucid.render;
 import com.orcus.lucid.render.input.GameInput;
 import com.orcus.lucid.render.loop.GameLoop;
 import com.orcus.lucid.render.loop.GameLoopVariable;
-import com.orcus.lucid.render.util.Vector2;
+import com.orcus.lucid.util.Vector2;
 
 import java.awt.*;
 
@@ -11,16 +11,13 @@ import java.awt.*;
 public abstract class Scene {
 
     public final Camera camera;
-    public int x, y, width, height;
+    private int width, height;
 
     private GameScreen gameScreen;
     private GameLoop gameLoop;
 
-    private boolean requestStop;
 
     public Scene(int width, int height) {
-        this.x = 0;
-        this.y = 0;
         this.width = width;
         this.height = height;
         this.camera = new Camera(width, height);
@@ -38,7 +35,7 @@ public abstract class Scene {
         // call start
         start();
 
-        while (isPlaying() && !requestStop) {
+        while (isPlaying()) {
             if (gameLoop.onLoop(this, gameState, gameInput, graphics)) {
                 // display graphics to screen
                 gameScreen.update();
@@ -51,15 +48,14 @@ public abstract class Scene {
         System.exit(0);
     }
 
-    public void updateInternal() {
+    public void updateInternal(GameInput input, float deltaTime) {
         camera.update();
+        update(input, deltaTime);
     }
-
 
     public void drawInternal(GameState state, Graphics2D gr) {
         camera.draw(state, gr);
 
-        //    public void draw(GameState state, Graphics2D gr) {
 //        for (Body b : impulse.bodies) {
 //            if (b.shape instanceof Circle) {
 //                Circle c = (Circle) b.shape;
@@ -101,7 +97,6 @@ public abstract class Scene {
 //                gr.draw(new Line2D.Float(v.x, v.y, v.x + n.x * 4.0f, v.y + n.y * 4.0f));
 //            }
 //        }
-//    }
     }
 
     public Vector2 getWorldCoordinate(Vector2 mouse, Vector2 out) {
@@ -116,11 +111,11 @@ public abstract class Scene {
     }
 
     public float getWorldCoordinateX(float mouseX) {
-        return camera.bounds.left + camera.bounds.getWidth() * (mouseX - x) / width;
+        return camera.bounds.left + camera.bounds.getWidth() * mouseX / width;
     }
 
     public float getWorldCoordinateY(float mouseY) {
-        return camera.bounds.top + camera.bounds.getHeight() * (mouseY - y) / height;
+        return camera.bounds.top + camera.bounds.getHeight() * mouseY / height;
     }
 
     /**
@@ -135,7 +130,7 @@ public abstract class Scene {
      * of key and mouse events that have occurred since this method was last
      * called.
      *
-     * @param input The input state of the game.
+     * @param input     The input state of the game.
      * @param deltaTime timeElapsed since last call of this function.
      */
     public abstract void update(GameInput input, float deltaTime);

@@ -2,8 +2,8 @@
 package com.orcus.lucid.render;
 
 
-import com.orcus.lucid.render.util.Bound2;
-import com.orcus.lucid.render.util.Vector2;
+import com.orcus.lucid.util.Bound2;
+import com.orcus.lucid.util.Vector2;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
