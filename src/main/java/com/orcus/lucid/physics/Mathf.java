@@ -19,7 +19,8 @@
 
 package com.orcus.lucid.physics;
 
-import com.orcus.lucid.physics.struct.Vector2;
+
+import com.orcus.lucid.util.Vector2;
 
 public class Mathf {
 
