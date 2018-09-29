@@ -1,0 +1,19 @@
+# Java class files
+*.class
+
+# files for the dex VM
+*.dex
+
+# Intellij project files
+.idea/
+*.ipr
+*.iws
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+#Gradle
+.gradle/
+build/
+bin/
+.gradletasknamecache
