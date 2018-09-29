@@ -1,10 +1,12 @@
 package com.orcus.lucid;
 
+import com.orcus.lucid.physics.collider.Circle;
 import com.orcus.lucid.render.Scene;
 import com.orcus.lucid.render.input.GameInput;
 import com.orcus.lucid.util.Vector2;
 
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 
 /**
  * @author Deepankar Agrawal
@@ -12,7 +14,6 @@ import java.awt.event.KeyEvent;
 public class TestScene extends Scene {
 
     private boolean playing = true;
-    private Vector2 temp;
 
     TestScene(int width, int height) {
         super(width, height);
@@ -36,10 +37,13 @@ public class TestScene extends Scene {
 
     @Override
     public void update(GameInput input, float deltaTime) {
-        System.out.println(input.mouseX + "," + input.mouseY);
 
         if (input.keyDown[KeyEvent.VK_ESCAPE]) {
             playing = false;
+        }
+
+        if (input.mouseUp[MouseEvent.BUTTON1]) {
+            addCollider(new Circle(new Vector2(input.mouseX, input.mouseY), 5));
         }
 
 //        if (input.keyDown[KeyEvent.VK_SHIFT]) {
