@@ -1,5 +1,8 @@
 package com.orcus.lucid;
 
+import com.orcus.lucid.physics.Material;
+import com.orcus.lucid.physics.RigidBody;
+import com.orcus.lucid.physics.World;
 import com.orcus.lucid.physics.collider.Circle;
 import com.orcus.lucid.render.Scene;
 import com.orcus.lucid.render.input.GameInput;
@@ -15,8 +18,8 @@ public class TestScene extends Scene {
 
     private boolean playing = true;
 
-    TestScene(int width, int height) {
-        super(width, height);
+    public TestScene(int width, int height, World world) {
+        super(width, height, world);
     }
 
     @Override
@@ -43,7 +46,13 @@ public class TestScene extends Scene {
         }
 
         if (input.mouseUp[MouseEvent.BUTTON1]) {
-            addCollider(new Circle(new Vector2(input.mouseX, input.mouseY), 20));
+            RigidBody b = new RigidBody(
+                    new Circle(0.1f),
+                    new Material(),
+                    new Vector2(input.mouseX/METER_TO_PIXEL_MULTIPLIER, input.mouseY/METER_TO_PIXEL_MULTIPLIER)
+            );
+            System.out.println(input.mouseX +"/"+ input.mouseY);
+            physicsWorld.addRigidBody(b);
         }
 
 //        if (input.keyDown[KeyEvent.VK_SHIFT]) {

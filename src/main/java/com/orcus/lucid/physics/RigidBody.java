@@ -8,26 +8,32 @@ import com.orcus.lucid.util.Vector2;
  */
 public class RigidBody {
 
+    // translational components
     public final Vector2 position = new Vector2();
     public final Vector2 velocity = new Vector2();
     public final Vector2 force = new Vector2();
 
+    // rotational components
+    public float orientation; // in radians
     public float angularVelocity;
     public float torque;
+
     public float mass, inverseMass, inertia, inverseInertia;
     public boolean isStatic;
 
     public final Material material;
     public final Collider collider;
 
-    public RigidBody(Collider collider, Material material, int x, int y) {
+    public RigidBody(Collider collider, Material material, Vector2 position) {
         this.collider = collider;
+        this.collider.position = this.position;
         this.material = material;
 
-        this.position.set(x, y);
+        this.position.set(position);
         this.velocity.set(0, 0);
         this.force.set(0, 0);
 
+        this.orientation = 0;
         this.angularVelocity = 0;
         this.torque = 0;
 

@@ -395,4 +395,8 @@ public class Vector2 {
         return array;
     }
 
+    @Override
+    public String toString() {
+        return "("+this.x+","+this.y+")";
+    }
 }

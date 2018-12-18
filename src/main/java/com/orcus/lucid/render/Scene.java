@@ -1,35 +1,37 @@
 package com.orcus.lucid.render;
 
+import com.orcus.lucid.physics.RigidBody;
+import com.orcus.lucid.physics.World;
 import com.orcus.lucid.physics.collider.Circle;
 import com.orcus.lucid.physics.collider.Collider;
 import com.orcus.lucid.physics.collider.Polygon;
 import com.orcus.lucid.render.input.GameInput;
 import com.orcus.lucid.render.loop.GameLoop;
-import com.orcus.lucid.render.loop.GameLoopVariable;
+import com.orcus.lucid.render.loop.GameLoopFixed;
 import com.orcus.lucid.util.Vector2;
 
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
-import java.util.ArrayList;
 
 
 public abstract class Scene {
 
-    public final Camera camera;
+    public static final float METER_TO_PIXEL_MULTIPLIER = 100;
+
+    protected final Camera camera;
+    protected World physicsWorld;
 
     private int width, height;
-    private ArrayList<Collider> colliders;
     private GameScreen gameScreen;
     private GameLoop gameLoop;
 
-    public Scene(int width, int height) {
+    public Scene(int width, int height, World world) {
         this.width = width;
         this.height = height;
         this.camera = new Camera(width, height);
-        this.gameLoop = new GameLoopVariable(0.1f);
+        this.gameLoop = new GameLoopFixed(3, world.getTimeStep(), 1/20);
         this.gameScreen = new GameScreen(width, height, true);
-
-        this.colliders = new ArrayList<>(5);
+        this.physicsWorld = world;
     }
 
     public void showWindow(String title) {
@@ -39,8 +41,8 @@ public abstract class Scene {
         GameState gameState = new GameState();
         gameLoop.onStart(this, gameState);
 
-        // call start
-        start();
+        start(); // call start
+        drawInternal(gameState, graphics); // render once
 
         while (isPlaying()) {
             if (gameLoop.onLoop(this, gameState, gameInput, graphics)) {
@@ -53,14 +55,6 @@ public abstract class Scene {
         destroy();
 
         System.exit(0);
-    }
-
-    public void addCollider(Collider collider) {
-        colliders.add(collider);
-    }
-
-    public void removeCollider(Collider collider) {
-        colliders.remove(collider);
     }
 
     public Vector2 getWorldCoordinate(Vector2 mouse, Vector2 out) {
@@ -79,13 +73,15 @@ public abstract class Scene {
 
     public void updateInternal(GameInput input, float deltaTime) {
         camera.update();
+        physicsWorld.update();
         update(input, deltaTime);
     }
 
     public void drawInternal(GameState state, Graphics2D gr) {
         camera.draw(state, gr);
 
-        for (Collider c : colliders) {
+        for (RigidBody b : physicsWorld.getRigidbodies()) {
+            Collider c = b.collider;
             if (c instanceof Circle) {
                 drawCircle((Circle) c, gr);
             } else if (c instanceof Polygon) {
@@ -97,13 +93,12 @@ public abstract class Scene {
     private void drawCircle(Circle circle, Graphics2D gr) {
 //        float rx = (float) StrictMath.cos(b.orient) * circle.radius;
 //        float ry = (float) StrictMath.sin(b.orient) * circle.radius;
-
         gr.setColor(Color.red);
         gr.draw(new Ellipse2D.Float(
-                circle.position.x - circle.radius,
-                circle.position.y - circle.radius,
-                circle.radius * 2,
-                circle.radius * 2
+                (circle.position.x - circle.radius) * METER_TO_PIXEL_MULTIPLIER,
+                (circle.position.y - circle.radius) * METER_TO_PIXEL_MULTIPLIER,
+                circle.radius * 2 * METER_TO_PIXEL_MULTIPLIER,
+                circle.radius * 2 * METER_TO_PIXEL_MULTIPLIER
         ));
 //        gr.draw(new Line2D.Float(b.position.x, b.position.y, b.position.x + rx, b.position.y + ry));
     }
