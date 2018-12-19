@@ -42,13 +42,10 @@ public abstract class Scene {
         gameLoop.onStart(this, gameState);
 
         start(); // call start
-        drawInternal(gameState, graphics); // render once
+        renderInternal(gameState, graphics); // render once
 
         while (isPlaying()) {
-            if (gameLoop.onLoop(this, gameState, gameInput, graphics)) {
-                // display graphics to screen
-                gameScreen.update();
-            }
+            gameLoop.onLoop(this, gameState, gameInput, graphics);
         }
 
         // call destroy
@@ -73,11 +70,13 @@ public abstract class Scene {
 
     public void updateInternal(GameInput input, float deltaTime) {
         camera.update();
-        physicsWorld.update();
         update(input, deltaTime);
+        physicsWorld.update(deltaTime);
+
+        input.clear();
     }
 
-    public void drawInternal(GameState state, Graphics2D gr) {
+    public void renderInternal(GameState state, Graphics2D gr) {
         camera.draw(state, gr);
 
         for (RigidBody b : physicsWorld.getRigidbodies()) {
@@ -88,6 +87,9 @@ public abstract class Scene {
                 drawPolygon((Polygon) c, gr);
             }
         }
+
+        // display graphics to screen
+        gameScreen.update();
     }
 
     private void drawCircle(Circle circle, Graphics2D gr) {

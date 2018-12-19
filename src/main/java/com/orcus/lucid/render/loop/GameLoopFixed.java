@@ -22,12 +22,6 @@ public class GameLoopFixed implements GameLoop {
         this.drawRate = (long) (drawRate * 1000000000L);
     }
 
-    public GameLoopFixed(int maxUpdates, long updateRate, long drawRate, TimeUnit timeUnit) {
-        this.maxUpdates = maxUpdates;
-        this.updateRate = timeUnit.toNanos(updateRate);
-        this.drawRate = timeUnit.toNanos(drawRate);
-    }
-
     @Override
     public void onStart(Scene scene, GameState state) {
         state.reset();
@@ -41,10 +35,8 @@ public class GameLoopFixed implements GameLoop {
         updateTime += nanosElapsed;
 
         int updateCount = 0;
-
         while (updateTime >= updateRate && updateCount < maxUpdates) {
-            scene.updateInternal(input, state.seconds);
-            input.clear();
+            scene.updateInternal(input, state.secondsDelta);
 
             if (!scene.isPlaying()) {
                 return false;
@@ -60,10 +52,10 @@ public class GameLoopFixed implements GameLoop {
 
         if (drawTime >= drawRate || updateCount > 0) {
             state.interpolate = getStateInterpolation();
-            state.forward = state.interpolate * state.seconds;
-            state.backward = state.forward - state.seconds;
+            state.forward = state.interpolate * state.secondsDelta;
+            state.backward = state.forward - state.secondsDelta;
 
-            scene.drawInternal(state, gr);
+            scene.renderInternal(state, gr);
             drawCount++;
 
             drawTime -= (drawRate == 0 ? drawTime : drawRate);

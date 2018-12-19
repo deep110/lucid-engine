@@ -40,7 +40,8 @@ public class World {
         return this.timeStep;
     }
 
-    public void update() {
+    public void update(float deltaTime) {
+//        System.out.println(1/deltaTime);
         // TODO: run the physics simulation
     }
 

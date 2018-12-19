@@ -2,23 +2,18 @@ package com.orcus.lucid.render;
 
 public class GameState {
 
-    public float seconds;
-    public long millis;
-    public long startTime;
-    public long lastTime;
-    public long currentTime;
+    public float secondsDelta;
     public float forward = 0;
     public float backward = 0;
     public float interpolate = 0;
 
-    public long reset() {
-        long resetTime = System.nanoTime();
+    private long lastTime;
+    private long currentTime;
 
-        startTime = resetTime;
+    public void reset() {
+        long resetTime = System.nanoTime();
         lastTime = resetTime;
         currentTime = resetTime;
-
-        return resetTime;
     }
 
     public long tick() {
@@ -32,8 +27,7 @@ public class GameState {
     }
 
     public void setElapsed(long nanosElapsed) {
-        millis = nanosElapsed / 1000000L;
-        seconds = (float) (nanosElapsed * 0.000000001);
+        secondsDelta = (float) (nanosElapsed * 0.000000001);
     }
 
 }
