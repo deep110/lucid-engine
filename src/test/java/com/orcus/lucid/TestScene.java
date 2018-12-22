@@ -48,7 +48,7 @@ public class TestScene extends Scene {
         if (input.mouseUp[MouseEvent.BUTTON1]) {
             RigidBody b = new RigidBody(
                     new Circle(0.1f),
-                    new Material(),
+                    new Material(0.6f, 0.1f), // wood
                     new Vector2(input.mouseX/METER_TO_PIXEL_MULTIPLIER, input.mouseY/METER_TO_PIXEL_MULTIPLIER)
             );
             System.out.println(input.mouseX +"/"+ input.mouseY);

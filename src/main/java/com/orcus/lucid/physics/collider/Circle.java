@@ -22,8 +22,9 @@ public class Circle extends Collider {
         rigidBody.inverseInertia = (rigidBody.inertia != 0.0f) ? 1.0f / rigidBody.inertia : 0.0f;
     }
 
+
     @Override
     public String toString() {
-        return position.toString() + "radius:" + radius;
+        return position.toString() + "/radius:" + radius;
     }
 }

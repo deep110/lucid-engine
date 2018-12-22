@@ -14,11 +14,13 @@ public class World {
     private Vector2 gravity;
     private float timeStep;
     private ArrayList<RigidBody> rigidBodies;
+    private CollisionManager collisionManager;
 
 
     public World(Vector2 gravity, float timeStep) {
         this.gravity = gravity;
         this.timeStep = timeStep;
+        this.collisionManager = CollisionManager.getInstance();
 
         this.rigidBodies = new ArrayList<>(4);
     }
@@ -32,7 +34,7 @@ public class World {
         rigidBodies.remove(body);
     }
 
-    public ArrayList<RigidBody> getRigidbodies() {
+    public ArrayList<RigidBody> getRigidBodies() {
         return rigidBodies;
     }
 
@@ -41,8 +43,11 @@ public class World {
     }
 
     public void update(float deltaTime) {
-//        System.out.println(1/deltaTime);
         // TODO: run the physics simulation
+    }
+
+    private void createBroadPhase() {
+
     }
 
 }

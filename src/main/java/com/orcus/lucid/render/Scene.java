@@ -79,7 +79,7 @@ public abstract class Scene {
     public void renderInternal(GameState state, Graphics2D gr) {
         camera.draw(state, gr);
 
-        for (RigidBody b : physicsWorld.getRigidbodies()) {
+        for (RigidBody b : physicsWorld.getRigidBodies()) {
             Collider c = b.collider;
             if (c instanceof Circle) {
                 drawCircle((Circle) c, gr);
