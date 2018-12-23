@@ -24,18 +24,6 @@ public class TestScene extends Scene {
 
     @Override
     public void start() {
-//        impulse = new ImpulseScene(ImpulseMath.DT, 10);
-//
-//        Body b = null;
-//
-//        b = impulse.add(new Circle(30.0f), 200, 200);
-//        b.setStatic();
-//
-//        b = impulse.add(new Polygon(200.0f, 10.0f), 240, 300);
-//        b.setStatic();
-//        b.setOrient(0);
-//
-//        accumulator = 0f;
     }
 
     @Override
@@ -85,14 +73,6 @@ public class TestScene extends Scene {
 //
 //                impulse.add(new Circle(r), input.mouseX, input.mouseY);
 //            }
-//        }
-
-//        accumulator += state.secondsDelta;
-//
-//        if (accumulator >= impulse.dt) {
-//            impulse.step();
-//
-//            accumulator -= impulse.dt;
 //        }
     }
 

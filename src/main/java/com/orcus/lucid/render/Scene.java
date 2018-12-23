@@ -29,7 +29,7 @@ public abstract class Scene {
         this.width = width;
         this.height = height;
         this.camera = new Camera(width, height);
-        this.gameLoop = new GameLoopFixed(3, world.getTimeStep(), 1/20);
+        this.gameLoop = new GameLoopFixed(3, world.timeStep, 1/20);
         this.gameScreen = new GameScreen(width, height, true);
         this.physicsWorld = world;
     }

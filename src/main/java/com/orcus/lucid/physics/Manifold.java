@@ -31,8 +31,4 @@ public class Manifold {
         this.collisionNormal = new Vector2();
         this.contactCount = 0;
     }
-
-    public void solve(CollisionManager collisionManager) {
-        collisionManager.handleCollision(this, A, B);
-    }
 }

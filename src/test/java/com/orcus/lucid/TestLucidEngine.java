@@ -10,7 +10,7 @@ public class TestLucidEngine {
     public static void main(String[] args) {
         Vector2 gravity = new Vector2(0, -10);
 
-        World world = new World(gravity, Mathf.DT);
+        World world = new World(gravity, Mathf.DT, 10);
 
         TestScene testScene = new TestScene(720, 640, world);
         testScene.showWindow("Lucid Engine");
