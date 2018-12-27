@@ -48,12 +48,19 @@ public class RigidBody {
         inertia = inverseInertia = mass = inverseMass = 0;
     }
 
-    public void addForce(Vector2 force) {
+    public void applyForce(Vector2 force) {
         this.force.addi(force);
     }
 
-    public void addImpulse() {
+    public void addImpulse(Vector2 impulse, Vector2 contactVector) {
 
+        // V = V + (j ∗ n) / mass
+        // impulse or momentum
+        // to see derivation:
+        // https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331
+
+        velocity.addsi(impulse, inverseMass);
+        angularVelocity += inverseInertia * Vector2.cross(contactVector, impulse);
     }
 
 }

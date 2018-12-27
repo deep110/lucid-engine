@@ -41,7 +41,6 @@ public class TestScene extends Scene {
             );
             System.out.println(input.mouseX +"/"+ input.mouseY);
             physicsWorld.addRigidBody(b);
-            playing= false;
         }
 
 //        if (input.keyDown[KeyEvent.VK_SHIFT]) {

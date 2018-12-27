@@ -30,7 +30,7 @@ public class Mathf {
     public static final float BIAS_RELATIVE = 0.95f;
     public static final float BIAS_ABSOLUTE = 0.01f;
     public static final float DT = 1.0f / 60.0f;
-    public static final Vector2 GRAVITY = new Vector2(0.0f, 50.0f);
+    public static final Vector2 GRAVITY = new Vector2(0.0f, 10.0f);
     public static final float RESTING = GRAVITY.mul(DT).lengthSq() + EPSILON;
     public static final float PENETRATION_ALLOWANCE = 0.05f;
     public static final float PENETRATION_CORRETION = 0.4f;
