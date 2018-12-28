@@ -6,6 +6,16 @@ import com.orcus.lucid.util.Vector2;
 
 /**
  * @author Deepankar Agrawal
+ *
+ * Helper class for resolving collisions between colliders
+ *
+ * Resolving collisions involves two things:
+ * 1. check if two colliders are touching or not
+ * 2. If yes fill the manifold with following three info:
+ *  - contactCount     : number of points of contact
+ *  - penetrationDepth : how far body is inside another (ideally should be near 0)
+ *  - collisionNormal  : normal direction of collision
+ *  - contacts         : coordinates of contact points
  */
 public class CollisionManager {
 
