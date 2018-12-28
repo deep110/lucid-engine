@@ -119,7 +119,6 @@ public class World {
         }
     }
 
-
     private void integrateAcceleration(RigidBody body, float dt) {
 
         if (body.inverseMass == 0) {

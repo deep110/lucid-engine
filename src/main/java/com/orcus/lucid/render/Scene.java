@@ -80,48 +80,11 @@ public abstract class Scene {
         camera.draw(state, gr);
 
         for (RigidBody b : physicsWorld.getRigidBodies()) {
-            Collider c = b.collider;
-            if (c instanceof Circle) {
-                drawCircle((Circle) c, gr);
-            } else if (c instanceof Polygon) {
-                drawPolygon((Polygon) c, gr);
-            }
+            b.collider.render(gr, METER_TO_PIXEL_MULTIPLIER);
         }
 
         // display graphics to screen
         gameScreen.update();
-    }
-
-    private void drawCircle(Circle circle, Graphics2D gr) {
-//        float rx = (float) StrictMath.cos(b.orient) * circle.radius;
-//        float ry = (float) StrictMath.sin(b.orient) * circle.radius;
-        gr.setColor(Color.red);
-        gr.draw(new Ellipse2D.Float(
-                (circle.position.x - circle.radius) * METER_TO_PIXEL_MULTIPLIER,
-                (circle.position.y - circle.radius) * METER_TO_PIXEL_MULTIPLIER,
-                circle.radius * 2 * METER_TO_PIXEL_MULTIPLIER,
-                circle.radius * 2 * METER_TO_PIXEL_MULTIPLIER
-        ));
-//        gr.draw(new Line2D.Float(b.position.x, b.position.y, b.position.x + rx, b.position.y + ry));
-    }
-
-    private void drawPolygon(Polygon polygon, Graphics2D gr) {
-//        Path2D.Float path = new Path2D.Float();
-//        for (int i = 0; i < polygon.vertexCount; i++) {
-//            Vector2 v = new Vector2(p.vertices[i]);
-//            polygon.u.muli(v);
-//            v.addi(b.position);
-//
-//            if (i == 0) {
-//                path.moveTo(v.x, v.y);
-//            } else {
-//                path.lineTo(v.x, v.y);
-//            }
-//        }
-//        path.closePath();
-//
-//        gr.setColor(Color.blue);
-//        gr.draw(path);
     }
 
     // ------------------------------------------------------------------
