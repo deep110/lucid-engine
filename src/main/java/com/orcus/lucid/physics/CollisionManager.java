@@ -75,6 +75,9 @@ public class CollisionManager {
     }
 
     private void collisionPolygonPolygon(Manifold m, RigidBody a, RigidBody b) {
+        Polygon A = (Polygon) a.collider;
+        Polygon B = (Polygon) a.collider;
+
 
     }
 

@@ -10,7 +10,11 @@ import java.util.ArrayList;
  * Here we will interface physics simulation and scene (which is renderer)
  * <p>
  * Mainly simulation consists of three steps
- * 1. Calculate colliding pairs of rigidbodies i.e BroadPhase calculation
+ * 1. Calculate colliding pairs of rigidbodies i.e NarrowPhase calculation
+ *    Note:
+ *    By seperating regions we can first generate broadphase and then
+ *    proceed to narrow phase, we can implement broad phase later
+ *
  * 2. Use Semi-implicit (Symplectic) euler to apply forces
  * v += (1/m * F) * dt
  * x += v * dt
@@ -93,8 +97,8 @@ public class World {
 
     private void generateCollisionInfo() {
         // iterate over every body and save collision info to
-        // manifold
-        // it is also called broad-phase generation
+        // manifold [O(n2)]
+        // it is also called narrow-phase generation
         manifolds.clear();
 
         for (int i = 0; i < rigidBodies.size(); ++i) {
