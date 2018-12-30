@@ -20,14 +20,18 @@ public class Vector2 {
         set(v);
     }
 
-    public void set(float x, float y) {
+    public Vector2 set(float x, float y) {
         this.x = x;
         this.y = y;
+
+        return this;
     }
 
-    public void set(Vector2 v) {
+    public Vector2 set(Vector2 v) {
         this.x = v.x;
         this.y = v.y;
+
+        return this;
     }
 
     /**
@@ -230,6 +234,16 @@ public class Vector2 {
         return out;
     }
 
+    public Vector2 subs(Vector2 v, float s, Vector2 out) {
+        out.x = x - v.x * s;
+        out.y = y - v.y * s;
+        return out;
+    }
+
+    public Vector2 subsi(Vector2 v, float s) {
+        return subs(v, s, this);
+    }
+
     /**
      * Returns a new vector that is the subtraction of v from this vector.
      */
@@ -393,6 +407,19 @@ public class Vector2 {
         }
 
         return array;
+    }
+
+    public static boolean isEqual(Vector2 one, Vector2 two) {
+        return (one.x == two.x) && (one.y == two.y);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Vector2) {
+            Vector2 other = (Vector2) obj;
+            return (other.x == this.x) && (other.y == this.y);
+        }
+        return false;
     }
 
     @Override

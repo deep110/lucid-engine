@@ -58,4 +58,14 @@ public class Mathf {
     public static boolean gt(float a, float b) {
         return a >= b * BIAS_RELATIVE + a * BIAS_ABSOLUTE;
     }
+
+    public static int sign(float a) {
+        if (a > 0) {
+            return 1;
+        } else if (a < 0) {
+            return -1;
+        } else {
+            return 0;
+        }
+    }
 }

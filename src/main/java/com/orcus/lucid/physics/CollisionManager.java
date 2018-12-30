@@ -72,7 +72,66 @@ public class CollisionManager {
 
 
     private void collisionCircleAABB(Manifold m, RigidBody a, RigidBody b) {
+        Circle A = (Circle) a.collider;
+        AABB B = (AABB) b.collider;
 
+        Vector2 n = B.position.sub(A.position);
+
+        // Closest point on B to center of A
+        Vector2 closest = new Vector2(n);
+
+        // Calculate half extents along each axis
+        float x_extent = B.width / 2;
+        float y_extent = B.height / 2;
+
+        // Clamp point to edges of the AABB
+        closest.x = Mathf.clamp(-x_extent, x_extent, closest.x);
+        closest.y = Mathf.clamp(-y_extent, y_extent, closest.y);
+
+        boolean inside = false;
+
+        // Circle is inside the AABB, so we need to clamp the circle's center
+        // to the closest edge
+        if (n == closest) {
+            inside = true;
+
+            // Find closest axis
+            if (StrictMath.abs(n.x) > StrictMath.abs(n.y)) {
+                // Clamp to closest extent
+                if (closest.x > 0)
+                    closest.x = x_extent;
+                else
+                    closest.x = -x_extent;
+            }
+
+            // y axis is shorter
+            else {
+                // Clamp to closest extent
+                if (closest.y > 0)
+                    closest.y = y_extent;
+                else
+                    closest.y = -y_extent;
+            }
+        }
+
+        Vector2 normal = n.sub(closest);
+        float d = normal.lengthSq();
+        float r = A.radius;
+
+        // Early out of the radius is shorter than distance to closest point and
+        // Circle not inside the AABB
+        if (d > r * r && !inside) {
+            return;
+        }
+        m.contactCount = 1;
+        // Avoided sqrt until we needed
+        d = (float) StrictMath.sqrt(d);
+
+        // Collision normal needs to be flipped to point outside if circle was
+        // inside the AABB
+        m.collisionNormal.set((inside) ? n.mul(-1): n);
+        m.penetrationDepth = r - d;
+        m.contacts[0].set(A.position).addsi(m.collisionNormal, A.radius);
     }
 
     private void collisionAABBAABB(Manifold m, RigidBody a, RigidBody b) {
@@ -92,26 +151,27 @@ public class CollisionManager {
 
             // SAT test on y axis
             if (y_overlap > 0) {
-                m.contactCount = 2;
-                m.contacts[0] = new Vector2(A.position.x + A.width / 2 - x_overlap, A.position.y + A.height / 2);
-                m.contacts[1] = new Vector2(A.position.x + A.width / 2, A.position.y + A.height / 2 - y_overlap);
+                m.contactCount = 1;
+                float sign;
 
                 // Find out which axis is axis of least penetration
-                if (x_overlap > y_overlap) {
+                if (x_overlap < y_overlap) {
                     // Point towards B knowing that n points from A to B
-                    if (n.x < 0)
-                        m.collisionNormal = new Vector2(-1, 0);
-                    else
-                        m.collisionNormal = new Vector2(0, 0);
+                    sign = Mathf.sign(n.x);
+                    m.collisionNormal.set(sign, 0);
                     m.penetrationDepth = x_overlap;
                 } else {
                     // Point toward B knowing that n points from A to B
-                    if (n.y < 0)
-                        m.collisionNormal = new Vector2(0, -1);
-                    else
-                        m.collisionNormal = new Vector2(0, 1);
+                    sign = Mathf.sign(n.y);
+                    m.collisionNormal.set(0, sign);
                     m.penetrationDepth = y_overlap;
                 }
+
+                // A->position + sign(B-A) * [(w/2, h/2) - normal * pDepth]
+                m.contacts[0].set(
+                        A.position.addsi(new Vector2(A.width/2, A.height/2)
+                        .subsi(m.collisionNormal, m.penetrationDepth), sign)
+                );
             }
         }
     }
