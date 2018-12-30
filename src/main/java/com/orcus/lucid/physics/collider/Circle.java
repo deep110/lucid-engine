@@ -35,7 +35,8 @@ public class Circle extends Collider {
                 (position.y - radius) * renderScalingFactor,
                 radius * 2 * renderScalingFactor,
                 radius * 2 * renderScalingFactor
-        ));
+                )
+        );
 //        gr.draw(new Line2D.Float(b.position.x, b.position.y, b.position.x + rx, b.position.y + ry));
     }
 
