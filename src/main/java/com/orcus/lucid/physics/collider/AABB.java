@@ -1,6 +1,7 @@
 package com.orcus.lucid.physics.collider;
 
 import com.orcus.lucid.physics.RigidBody;
+import com.orcus.lucid.util.Vector2;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
@@ -12,6 +13,15 @@ public class AABB extends Collider {
 
     public float width;
     public float height;
+
+    private Vector2 renderPosition;
+
+    public AABB(float width, float height) {
+        this.width = width;
+        this.height = height;
+
+        renderPosition = new Vector2();
+    }
 
 
     @Override
@@ -29,10 +39,12 @@ public class AABB extends Collider {
         float halfWidth = width / 2 * renderScalingFactor;
         float halfHeight = height / 2 * renderScalingFactor;
 
-        path.moveTo(position.x - halfWidth, position.y - halfHeight);
-        path.lineTo(position.x + halfWidth, position.y - halfHeight);
-        path.lineTo(position.x + halfWidth, position.y + halfHeight);
-        path.lineTo(position.x - halfWidth, position.y + halfHeight);
+        renderPosition.set(position).muli(renderScalingFactor);
+
+        path.moveTo(renderPosition.x - halfWidth, renderPosition.y - halfHeight);
+        path.lineTo(renderPosition.x + halfWidth, renderPosition.y - halfHeight);
+        path.lineTo(renderPosition.x + halfWidth, renderPosition.y + halfHeight);
+        path.lineTo(renderPosition.x - halfWidth, renderPosition.y + halfHeight);
 
         path.closePath();
 

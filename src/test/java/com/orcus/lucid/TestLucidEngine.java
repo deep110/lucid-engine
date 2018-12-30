@@ -8,7 +8,7 @@ import com.orcus.lucid.util.Vector2;
 public class TestLucidEngine {
 
     public static void main(String[] args) {
-        Vector2 gravity = new Vector2(0, 6);
+        Vector2 gravity = new Vector2(0, 3);
 
         World world = new World(gravity, Mathf.DT, 10);
 

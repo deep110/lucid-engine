@@ -1,8 +1,10 @@
 package com.orcus.lucid;
 
 import com.orcus.lucid.physics.Material;
+import com.orcus.lucid.physics.Mathf;
 import com.orcus.lucid.physics.RigidBody;
 import com.orcus.lucid.physics.World;
+import com.orcus.lucid.physics.collider.AABB;
 import com.orcus.lucid.physics.collider.Circle;
 import com.orcus.lucid.render.Scene;
 import com.orcus.lucid.render.input.GameInput;
@@ -24,6 +26,13 @@ public class TestScene extends Scene {
 
     @Override
     public void start() {
+        RigidBody b = new RigidBody(
+                new AABB(1f, 0.5f),
+                new Material(0.6f, 0.1f), // rock
+                renderToWorldCoordinate(new Vector2(346, 516))
+        );
+        b.setStatic();
+        physicsWorld.addRigidBody(b);
     }
 
     @Override
@@ -37,45 +46,23 @@ public class TestScene extends Scene {
         physicsWorld.getRigidBodies().removeIf(this::isBodyOutOfScreen);
 
         if (input.mouseUp[MouseEvent.BUTTON1]) {
+            float hw = Mathf.random(0.2f, 0.6f);
+            float hh = Mathf.random(0.2f, 0.6f);
             RigidBody b = new RigidBody(
-                    new Circle(0.1f),
-                    new Material(0.6f, 0.1f), // wood
-                    new Vector2(input.mouseX / METER_TO_PIXEL_MULTIPLIER, input.mouseY / METER_TO_PIXEL_MULTIPLIER)
+                    new AABB(hw, hh),
+                    new Material(0.6f, 0.1f), // rock
+                    renderToWorldCoordinate(new Vector2(input.mouseX, input.mouseY))
             );
-            System.out.println(input.mouseX + "/" + input.mouseY);
             physicsWorld.addRigidBody(b);
         }
-
-//        if (input.keyDown[KeyEvent.VK_SHIFT]) {
-//            if (input.mouseUp[MouseEvent.BUTTON1]) {
-//                float hw = ImpulseMath.random(10.0f, 30.0f);
-//                float hh = ImpulseMath.random(10.0f, 30.0f);
-//
-//                Body b = impulse.add(new Polygon(hw, hh), input.mouseX, input.mouseY);
-//                b.setOrient(0.0f);
-//            }
-//        } else {
-//            if (input.mouseUp[MouseEvent.BUTTON1]) {
-//                float r = ImpulseMath.random(10.0f, 50.0f);
-//                int vertCount = ImpulseMath.random(3, Polygon.MAX_POLY_VERTEX_COUNT);
-//
-//                Vector2[] verts = Vector2.arrayOf(vertCount);
-//                for (int i = 0; i < vertCount; i++) {
-//                    verts[i].set(ImpulseMath.random(-r, r), ImpulseMath.random(-r, r));
-//                }
-//
-//                Body b = impulse.add(new Polygon(verts), input.mouseX, input.mouseY);
-//                b.setOrient(ImpulseMath.random(-ImpulseMath.PI, ImpulseMath.PI));
-//                b.restitution = 0.2f;
-//                b.dynamicFriction = 0.2f;
-//                b.staticFriction = 0.4f;
-//            }
-//            if (input.mouseUp[MouseEvent.BUTTON3]) {
-//                float r = ImpulseMath.random(10.0f, 30.0f);
-//
-//                impulse.add(new Circle(r), input.mouseX, input.mouseY);
-//            }
-//        }
+        if (input.mouseUp[MouseEvent.BUTTON3]) {
+            RigidBody b = new RigidBody(
+                    new Circle(Mathf.random(0.1f, 0.4f)),
+                    new Material(0.6f, 0.1f), // wood
+                    renderToWorldCoordinate(new Vector2(input.mouseX, input.mouseY))
+            );
+            physicsWorld.addRigidBody(b);
+        }
     }
 
     @Override

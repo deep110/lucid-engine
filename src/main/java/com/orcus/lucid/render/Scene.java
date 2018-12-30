@@ -85,9 +85,15 @@ public abstract class Scene {
         gameScreen.update();
     }
 
+    // some util functions
+
     public boolean isBodyOutOfScreen(RigidBody body) {
         return !(body.position.x < width/METER_TO_PIXEL_MULTIPLIER && body.position.x > 0 &&
                 body.position.y < height/METER_TO_PIXEL_MULTIPLIER && body.position.y > 0);
+    }
+
+    public Vector2 renderToWorldCoordinate(Vector2 v) {
+        return v.divi(METER_TO_PIXEL_MULTIPLIER);
     }
 
     // ------------------------------------------------------------------
