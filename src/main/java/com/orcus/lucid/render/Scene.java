@@ -65,8 +65,6 @@ public abstract class Scene {
         return out;
     }
 
-    // ------------------------------------------------------------------
-    // private methods
 
     public void updateInternal(GameInput input, float deltaTime) {
         camera.update();
@@ -85,6 +83,11 @@ public abstract class Scene {
 
         // display graphics to screen
         gameScreen.update();
+    }
+
+    public boolean isBodyOutOfScreen(RigidBody body) {
+        return !(body.position.x < width/METER_TO_PIXEL_MULTIPLIER && body.position.x > 0 &&
+                body.position.y < height/METER_TO_PIXEL_MULTIPLIER && body.position.y > 0);
     }
 
     // ------------------------------------------------------------------

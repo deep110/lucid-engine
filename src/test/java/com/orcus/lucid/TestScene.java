@@ -33,13 +33,16 @@ public class TestScene extends Scene {
             playing = false;
         }
 
+        // remove out of bounds bodies
+        physicsWorld.getRigidBodies().removeIf(this::isBodyOutOfScreen);
+
         if (input.mouseUp[MouseEvent.BUTTON1]) {
             RigidBody b = new RigidBody(
                     new Circle(0.1f),
                     new Material(0.6f, 0.1f), // wood
-                    new Vector2(input.mouseX/METER_TO_PIXEL_MULTIPLIER, input.mouseY/METER_TO_PIXEL_MULTIPLIER)
+                    new Vector2(input.mouseX / METER_TO_PIXEL_MULTIPLIER, input.mouseY / METER_TO_PIXEL_MULTIPLIER)
             );
-            System.out.println(input.mouseX +"/"+ input.mouseY);
+            System.out.println(input.mouseX + "/" + input.mouseY);
             physicsWorld.addRigidBody(b);
         }
 
@@ -84,5 +87,4 @@ public class TestScene extends Scene {
     public boolean isPlaying() {
         return playing;
     }
-
 }
