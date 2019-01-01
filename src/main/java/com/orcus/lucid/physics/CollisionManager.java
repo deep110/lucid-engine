@@ -43,7 +43,7 @@ public class CollisionManager {
 
     private void collisionCircleCircle(Manifold m, RigidBody a, RigidBody b) {
         Circle A = (Circle) a.collider;
-        Circle B = (Circle) a.collider;
+        Circle B = (Circle) b.collider;
 
         float radius = A.radius + B.radius;
         Vector2 normal = (b.position.sub(a.position));
@@ -169,10 +169,9 @@ public class CollisionManager {
                 }
 
                 // A->position + sign(B-A) * [(w/2, h/2) - normal * pDepth]
-                m.contacts[0].set(
-                        a.position.addsi(new Vector2(A.width/2, A.height/2)
-                        .subsi(m.collisionNormal, m.penetrationDepth), sign)
-                );
+                m.contacts[0].set(a.position)
+                        .addsi(new Vector2(A.width/2, A.height/2)
+                        .subsi(m.collisionNormal, m.penetrationDepth), sign);
             }
         }
     }

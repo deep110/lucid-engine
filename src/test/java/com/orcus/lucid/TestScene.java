@@ -48,20 +48,22 @@ public class TestScene extends Scene {
         if (input.mouseUp[MouseEvent.BUTTON1]) {
             float hw = Mathf.random(0.2f, 0.6f);
             float hh = Mathf.random(0.2f, 0.6f);
-            RigidBody b = new RigidBody(
-                    new AABB(hw, hh),
-                    new Material(0.6f, 0.1f), // rock
-                    renderToWorldCoordinate(new Vector2(input.mouseX, input.mouseY))
+            physicsWorld.addRigidBody(
+                    new RigidBody(
+                            new AABB(hw, hh),
+                            new Material(0.6f, 0.1f), // rock
+                            renderToWorldCoordinate(new Vector2(input.mouseX, input.mouseY))
+                    )
             );
-            physicsWorld.addRigidBody(b);
         }
         if (input.mouseUp[MouseEvent.BUTTON3]) {
-            RigidBody b = new RigidBody(
-                    new Circle(Mathf.random(0.1f, 0.4f)),
-                    new Material(0.6f, 0.1f), // wood
-                    renderToWorldCoordinate(new Vector2(input.mouseX, input.mouseY))
+            physicsWorld.addRigidBody(
+                    new RigidBody(
+                            new Circle(Mathf.random(0.1f, 0.4f)),
+                            new Material(0.6f, 0.1f), // wood
+                            renderToWorldCoordinate(new Vector2(input.mouseX, input.mouseY))
+                    )
             );
-            physicsWorld.addRigidBody(b);
         }
     }
 
