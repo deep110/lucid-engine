@@ -136,7 +136,7 @@ public class World {
 
     private void integrateVelocity(RigidBody b, float dt) {
 
-        if (b.inverseMass == 0.0f) {
+        if (b.inverseMass == 0f) {
             return;
         }
 

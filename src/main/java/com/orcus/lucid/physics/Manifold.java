@@ -10,6 +10,9 @@ import com.orcus.lucid.util.Vector2;
  */
 public class Manifold {
 
+    private static final float PENETRATION_ALLOWANCE = 0.05f;
+    private static final float PENETRATION_CORRECTION = 0.4f;
+
     // normal direction rigidbodies when they collide
     public Vector2 collisionNormal;
 
@@ -94,13 +97,11 @@ public class Manifold {
     }
 
     public void positionalCorrection() {
-        // const real k_slop = 0.05f; // Penetration allowance
-        // const real percent = 0.4f; // Penetration percentage to correct
 
         // only do correction when penetration depth > penetration allowance
         float correction = StrictMath.max(
-                penetrationDepth - Mathf.PENETRATION_ALLOWANCE, 0.0f
-        ) / (A.inverseMass + B.inverseMass) * Mathf.PENETRATION_CORRETION;
+                penetrationDepth - PENETRATION_ALLOWANCE, 0.0f
+        ) / (A.inverseMass + B.inverseMass) * PENETRATION_CORRECTION;
 
         A.position.addsi(collisionNormal, -A.inverseMass * correction);
         B.position.addsi(collisionNormal, B.inverseMass * correction);

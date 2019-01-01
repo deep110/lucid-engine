@@ -46,17 +46,19 @@ public class CollisionManager {
         Circle B = (Circle) a.collider;
 
         float radius = A.radius + B.radius;
-        Vector2 normal = (a.position.sub(b.position));
+        Vector2 normal = (b.position.sub(a.position));
+        m.contactCount = 0;
 
+        // rigidbodies are not touching
         if (normal.lengthSq() > radius * radius) {
-            m.contactCount = 0; // rigidbodies are not touching
             return;
         }
 
         float distance = normal.length();
         m.contactCount = 1;
 
-        if (distance == 0.0f) { // circles overlap i.e on same position
+        // circles overlap i.e on same position
+        if (distance == 0.0f) {
             m.penetrationDepth = A.radius;
 
             // set any value
@@ -69,7 +71,6 @@ public class CollisionManager {
             m.contacts[0].set(m.collisionNormal.mul(A.radius).addi(a.position));
         }
     }
-
 
     private void collisionCircleAABB(Manifold m, RigidBody a, RigidBody b) {
         Circle A = (Circle) a.collider;
