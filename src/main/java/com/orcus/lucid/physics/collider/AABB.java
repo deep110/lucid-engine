@@ -33,13 +33,13 @@ public class AABB extends Collider {
     }
 
     @Override
-    public void render(Graphics2D gr, float renderScalingFactor) {
+    public void render(RigidBody b, Graphics2D gr, float renderScalingFactor) {
         Path2D.Float path = new Path2D.Float();
 
         float halfWidth = width / 2 * renderScalingFactor;
         float halfHeight = height / 2 * renderScalingFactor;
 
-        renderPosition.set(position).muli(renderScalingFactor);
+        renderPosition.set(b.position).muli(renderScalingFactor);
 
         path.moveTo(renderPosition.x - halfWidth, renderPosition.y - halfHeight);
         path.lineTo(renderPosition.x + halfWidth, renderPosition.y - halfHeight);

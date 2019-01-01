@@ -2,16 +2,12 @@ package com.orcus.lucid.render;
 
 import com.orcus.lucid.physics.RigidBody;
 import com.orcus.lucid.physics.World;
-import com.orcus.lucid.physics.collider.Circle;
-import com.orcus.lucid.physics.collider.Collider;
-import com.orcus.lucid.physics.collider.Polygon;
 import com.orcus.lucid.render.input.GameInput;
 import com.orcus.lucid.render.loop.GameLoop;
 import com.orcus.lucid.render.loop.GameLoopFixed;
 import com.orcus.lucid.util.Vector2;
 
 import java.awt.*;
-import java.awt.geom.Ellipse2D;
 
 
 public abstract class Scene {
@@ -78,7 +74,7 @@ public abstract class Scene {
         camera.draw(state, gr);
 
         for (RigidBody b : physicsWorld.getRigidBodies()) {
-            b.collider.render(gr, METER_TO_PIXEL_MULTIPLIER);
+            b.collider.render(b, gr, METER_TO_PIXEL_MULTIPLIER);
         }
 
         // display graphics to screen

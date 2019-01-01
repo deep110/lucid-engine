@@ -76,7 +76,7 @@ public class CollisionManager {
         Circle A = (Circle) a.collider;
         AABB B = (AABB) b.collider;
 
-        Vector2 n = B.position.sub(A.position);
+        Vector2 n = b.position.sub(a.position);
 
         // Closest point on B to center of A
         Vector2 closest = new Vector2(n);
@@ -132,7 +132,7 @@ public class CollisionManager {
         // inside the AABB
         m.collisionNormal.set((inside) ? n.mul(-1): n);
         m.penetrationDepth = r - d;
-        m.contacts[0].set(A.position).addsi(m.collisionNormal, A.radius);
+        m.contacts[0].set(a.position).addsi(m.collisionNormal, A.radius);
     }
 
     private void collisionAABBAABB(Manifold m, RigidBody a, RigidBody b) {
@@ -141,7 +141,7 @@ public class CollisionManager {
 
         m.contactCount = 0;
 
-        Vector2 n = B.position.sub(A.position);
+        Vector2 n = b.position.sub(a.position);
 
         // Calculate overlap on x axis (SAT test on x axis)
         float x_overlap = A.width / 2 + B.width / 2 - StrictMath.abs(n.x);
@@ -170,7 +170,7 @@ public class CollisionManager {
 
                 // A->position + sign(B-A) * [(w/2, h/2) - normal * pDepth]
                 m.contacts[0].set(
-                        A.position.addsi(new Vector2(A.width/2, A.height/2)
+                        a.position.addsi(new Vector2(A.width/2, A.height/2)
                         .subsi(m.collisionNormal, m.penetrationDepth), sign)
                 );
             }

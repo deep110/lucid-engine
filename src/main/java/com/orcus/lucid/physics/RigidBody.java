@@ -26,7 +26,6 @@ public class RigidBody {
 
     public RigidBody(Collider collider, Material material, Vector2 position) {
         this.collider = collider;
-        this.collider.position = this.position;
         this.material = material;
 
         this.position.set(position);

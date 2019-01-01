@@ -26,23 +26,17 @@ public class Circle extends Collider {
     }
 
     @Override
-    public void render(Graphics2D gr, float renderScalingFactor) {
+    public void render(RigidBody rigidBody, Graphics2D gr, float renderScalingFactor) {
 //        float rx = (float) StrictMath.cos(b.orient) * radius;
 //        float ry = (float) StrictMath.sin(b.orient) * radius;
         gr.setColor(Color.red);
         gr.draw(new Ellipse2D.Float(
-                (position.x - radius) * renderScalingFactor,
-                (position.y - radius) * renderScalingFactor,
+                (rigidBody.position.x - radius) * renderScalingFactor,
+                (rigidBody.position.y - radius) * renderScalingFactor,
                 radius * 2 * renderScalingFactor,
                 radius * 2 * renderScalingFactor
                 )
         );
 //        gr.draw(new Line2D.Float(b.position.x, b.position.y, b.position.x + rx, b.position.y + ry));
-    }
-
-
-    @Override
-    public String toString() {
-        return position.toString() + "/radius:" + radius;
     }
 }

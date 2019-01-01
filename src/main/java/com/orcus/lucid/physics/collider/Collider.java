@@ -10,9 +10,7 @@ import java.awt.*;
  */
 public abstract class Collider {
 
-    public Vector2 position;
-
     public abstract void computeMass(RigidBody rigidBody, float density);
 
-    public abstract void render(Graphics2D gr, float renderScalingFactor);
+    public abstract void render(RigidBody rigidBody, Graphics2D gr, float renderScalingFactor);
 }

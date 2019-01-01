@@ -74,11 +74,11 @@ public class Polygon extends Collider {
     }
 
     @Override
-    public void render(Graphics2D gr, float renderScalingFactor) {
+    public void render(RigidBody b, Graphics2D gr, float renderScalingFactor) {
         Path2D.Float path = new Path2D.Float();
         for (int i = 0; i < vertexCount; i++) {
             Vector2 v = new Vector2(vertices[i]);
-            v.addi(position);
+            v.addi(b.position);
 
             if (i == 0) {
                 path.moveTo(v.x, v.y);
