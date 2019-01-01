@@ -38,6 +38,9 @@ public class CollisionManager {
             collisionCircleAABB(m, a, b);
         } else {
             collisionCircleAABB(m, b, a);
+            if (m.contactCount > 0) {
+                m.collisionNormal.negi();
+            }
         }
     }
 
@@ -130,7 +133,7 @@ public class CollisionManager {
 
         // Collision normal needs to be flipped to point outside if circle was
         // inside the AABB
-        m.collisionNormal.set((inside) ? n.mul(-1): n);
+        m.collisionNormal.set((inside) ? n.mul(-1) : n);
         m.penetrationDepth = r - d;
         m.contacts[0].set(a.position).addsi(m.collisionNormal, A.radius);
     }
@@ -170,8 +173,8 @@ public class CollisionManager {
 
                 // A->position + sign(B-A) * [(w/2, h/2) - normal * pDepth]
                 m.contacts[0].set(a.position)
-                        .addsi(new Vector2(A.width/2, A.height/2)
-                        .subsi(m.collisionNormal, m.penetrationDepth), sign);
+                        .addsi(new Vector2(A.width / 2, A.height / 2)
+                                .subsi(m.collisionNormal, m.penetrationDepth), sign);
             }
         }
     }
