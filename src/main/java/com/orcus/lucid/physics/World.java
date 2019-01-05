@@ -19,7 +19,7 @@ import java.util.ArrayList;
  * 2. Use Semi-implicit (Symplectic) euler to apply forces
  * v += (1/m * F) * dt
  * x += v * dt
- * 3. Impulse Resolution using momentum conversation (@link com.orcus.lucid.physics.Manifold.java)
+ * 3. Impulse Resolution using momentum conversation {@link Manifold}
  * - Takes translational force and gravity
  * - Takes rotational torque
  * - Takes static and dynamic friction
