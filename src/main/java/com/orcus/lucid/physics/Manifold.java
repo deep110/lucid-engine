@@ -26,7 +26,10 @@ public class Manifold {
     public Vector2[] contacts = {new Vector2(), new Vector2()};
 
     private RigidBody A, B;
-    private float e;
+    private float e, fs, fd;
+
+    // these are just for temp storage
+    private float inverseMassSum, normalImpulseMag;
 
     public Manifold(RigidBody A, RigidBody B) {
         this.A = A;
@@ -39,6 +42,12 @@ public class Manifold {
     public void initialize() {
         // Calculate average restitution
         e = StrictMath.min(A.material.restitution, B.material.restitution);
+
+        fs = (float) StrictMath.sqrt(A.material.staticFriction * A.material.staticFriction
+                + B.material.staticFriction * B.material.staticFriction);
+        fd = (float) StrictMath.sqrt(A.material.dynamicFriction * A.material.dynamicFriction
+                + B.material.dynamicFriction * B.material.dynamicFriction);
+
 
         for (int i = 0; i < contactCount; ++i) {
 
@@ -70,27 +79,27 @@ public class Manifold {
             // Relative velocity
             Vector2 rv = B.velocity.sub(A.velocity);
 
-            // Relative velocity along the normal
-            float contactVel = Vector2.dot(rv, collisionNormal);
-
-            // Do not resolve if velocities are separating
-            if (contactVel > 0) {
+            Vector2 normalImpulse = calcNormalImpulse(rv);
+            if (normalImpulse == null) { // velocities are separating
                 return;
             }
 
-            float invMassSum = A.inverseMass + B.inverseMass;
+            A.addImpulse(normalImpulse.neg(), ra);
+            B.addImpulse(normalImpulse, rb);
 
-            // Calculate impulse scalar
-            float j = -(1.0f + e) * contactVel;
-            j /= invMassSum;
-            j /= contactCount;
+            // Friction impulse
 
-            // Apply impulse
-            Vector2 impulse = collisionNormal.mul(j);
-            A.addImpulse(impulse.neg(), ra);
-            B.addImpulse(impulse, rb);
+            // Recalculate relative velocity
+            rv = rv.set(B.velocity).subi(A.velocity);
+            Vector2 frictionImpulse = calcFrictionalImpulse(rv);
 
-            // TODO: apply friction
+            if (frictionImpulse == null) {
+                return;
+            }
+
+            A.addImpulse(frictionImpulse.neg(), ra);
+            B.addImpulse(frictionImpulse, rb);
+
             // TODO: add rotation
         }
 
@@ -105,6 +114,50 @@ public class Manifold {
 
         A.position.addsi(collisionNormal, -A.inverseMass * correction);
         B.position.addsi(collisionNormal, B.inverseMass * correction);
+    }
+
+
+    private Vector2 calcNormalImpulse(Vector2 rv) {
+        // Relative velocity along the normal
+        float contactVel = Vector2.dot(rv, collisionNormal);
+        if (contactVel > 0) { // Do not resolve if velocities are separating
+            return null;
+        }
+
+        inverseMassSum = A.inverseMass + B.inverseMass;
+
+        // Calculate impulse scalar
+        normalImpulseMag = -(1.0f + e) * contactVel;
+        normalImpulseMag /= inverseMassSum * contactCount;
+
+        // Calc impulse
+        return collisionNormal.mul(normalImpulseMag);
+    }
+
+    private Vector2 calcFrictionalImpulse(Vector2 rv) {
+        // calculate tangential relative velocity
+        //
+        // Vec2 t = rv - (normal * Dot( rv, normal ));
+        Vector2 tangentVel = rv.adds(collisionNormal, -Vector2.dot(rv, collisionNormal));
+        tangentVel.normalize();
+
+        // calculate magnitude of relative velocity in tangent direction
+        float jt = -Vector2.dot(rv, tangentVel);
+        jt /= inverseMassSum;
+        jt /= contactCount;
+
+        if (Mathf.equal(jt, 0)) {
+            return null;
+        }
+
+        // coulomb law
+        // F <= μFn
+        if (Math.abs(jt) < normalImpulseMag * fs) {
+            return tangentVel.muli(jt);
+        } else {
+            return tangentVel.muli(normalImpulseMag * fd);
+        }
+
     }
 
 }

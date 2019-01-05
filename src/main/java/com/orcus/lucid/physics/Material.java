@@ -33,10 +33,10 @@ public class Material {
     }
 
     public Material(float density, float restitution) {
-        this(density, restitution, 0, 0);
+        this(density, restitution, 0.1f, 0.1f);
     }
 
     public Material() {
-        this(0.6f, 1, 0, 0);
+        this(0.6f, 1);
     }
 }

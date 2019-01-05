@@ -52,8 +52,10 @@ Mainly simulation consists of three steps
         Fd = sqrt(Fd1 * Fd1 + Fd2 * Fd2)
       ```
       We can use average but using this gives better [results](https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-friction-scene-and-jump-table--gamedev-7756).
-    - Finally final frictional impulse is calculated using [Coulumb's Law](https://en.wikipedia.org/wiki/Friction#Dry_friction)
+    - Finally final frictional impulse is calculated using [Coulomb's Law](https://en.wikipedia.org/wiki/Friction#Dry_friction)
       
       F<sub>f</sub> <= μF<sub>n</sub>
       
       Friction force is less than or equal to normal force on the surface multiplied by μ.
+      Check is performed using static friction coefficient but value is taken to be of dynamic
+      coefficient.
