@@ -101,20 +101,10 @@ public class CollisionManager {
 
             // Find closest axis
             if (StrictMath.abs(n.x) > StrictMath.abs(n.y)) {
+                closest.x = Mathf.sign(closest.x) * x_extent;
+            } else { // y axis is shorter
                 // Clamp to closest extent
-                if (closest.x > 0)
-                    closest.x = x_extent;
-                else
-                    closest.x = -x_extent;
-            }
-
-            // y axis is shorter
-            else {
-                // Clamp to closest extent
-                if (closest.y > 0)
-                    closest.y = y_extent;
-                else
-                    closest.y = -y_extent;
+                closest.y = Mathf.sign(closest.y) * y_extent;
             }
         }
 
@@ -133,7 +123,7 @@ public class CollisionManager {
 
         // Collision normal needs to be flipped to point outside if circle was
         // inside the AABB
-        m.collisionNormal.set((inside) ? n.mul(-1) : n);
+        m.collisionNormal.set((inside) ? n.muli(-1) : n);
         m.penetrationDepth = r - d;
         m.contacts[0].set(a.position).addsi(m.collisionNormal, A.radius);
     }
@@ -164,17 +154,20 @@ public class CollisionManager {
                     sign = Mathf.sign(n.x);
                     m.collisionNormal.set(sign, 0);
                     m.penetrationDepth = x_overlap;
+
+                    Vector2 k = new Vector2(B.width/2, A.height/2).muli(m.collisionNormal);
+                    k.y += n.y;
+                    m.contacts[0].set(a.position).addi(k);
                 } else {
                     // Point toward B knowing that n points from A to B
                     sign = Mathf.sign(n.y);
                     m.collisionNormal.set(0, sign);
                     m.penetrationDepth = y_overlap;
-                }
 
-                // A->position + sign(B-A) * [(w/2, h/2) - normal * pDepth]
-                m.contacts[0].set(a.position)
-                        .addsi(new Vector2(A.width / 2, A.height / 2)
-                                .subsi(m.collisionNormal, m.penetrationDepth), sign);
+                    Vector2 k = new Vector2(B.width/2, A.height/2).muli(m.collisionNormal);
+                    k.x += n.x;
+                    m.contacts[0].set(a.position).addi(k);
+                }
             }
         }
     }

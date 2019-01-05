@@ -51,4 +51,9 @@ public class AABB extends Collider {
         gr.setColor(Color.blue);
         gr.draw(path);
     }
+
+    @Override
+    public String toString() {
+        return String.format("(%s, %s)", width, height);
+    }
 }

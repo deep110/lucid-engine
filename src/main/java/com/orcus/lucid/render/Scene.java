@@ -76,6 +76,7 @@ public abstract class Scene {
         for (RigidBody b : physicsWorld.getRigidBodies()) {
             b.collider.render(b, gr, METER_TO_PIXEL_MULTIPLIER);
         }
+        physicsWorld.renderContactPoints(gr, METER_TO_PIXEL_MULTIPLIER);
 
         // display graphics to screen
         gameScreen.update();

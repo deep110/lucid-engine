@@ -39,4 +39,9 @@ public class Circle extends Collider {
         );
 //        gr.draw(new Line2D.Float(b.position.x, b.position.y, b.position.x + rx, b.position.y + ry));
     }
+
+    @Override
+    public String toString() {
+        return Float.toString(radius);
+    }
 }

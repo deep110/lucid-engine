@@ -47,7 +47,7 @@ public class Manifold {
             // Determine if we should perform a resting collision or not
             // The idea is if the only thing moving this object is gravity,
             // then the collision should be performed without any restitution
-            // if(rv.LenSqr( ) < (dt * gravity).LenSqr( ) + EPSILON)
+            // if(rv.LenSqr() < (dt * gravity).LenSqr() + EPSILON)
             if (rv.lengthSq() < Mathf.RESTING) {
                 e = 0.0f;
             }

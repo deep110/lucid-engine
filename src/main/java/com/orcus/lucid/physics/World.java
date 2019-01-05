@@ -2,6 +2,7 @@ package com.orcus.lucid.physics;
 
 import com.orcus.lucid.util.Vector2;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 /**
@@ -92,6 +93,16 @@ public class World {
         for (RigidBody b : rigidBodies) {
             b.force.set(0, 0);
             b.torque = 0;
+        }
+    }
+
+    public void renderContactPoints(Graphics2D gr, float f) {
+        gr.setColor(Color.green);
+        for (Manifold manifold : manifolds) {
+            if (manifold.contactCount > 0) {
+                Vector2 k = manifold.contacts[0].mul(f);
+                gr.drawOval((int)k.x, (int) k.y, 2, 2);
+            }
         }
     }
 
