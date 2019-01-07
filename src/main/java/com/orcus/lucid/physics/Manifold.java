@@ -136,15 +136,13 @@ public class Manifold {
 
     private Vector2 calcFrictionalImpulse(Vector2 rv) {
         // calculate tangential relative velocity
-        //
         // Vec2 t = rv - (normal * Dot( rv, normal ));
         Vector2 tangentVel = rv.adds(collisionNormal, -Vector2.dot(rv, collisionNormal));
         tangentVel.normalize();
 
         // calculate magnitude of relative velocity in tangent direction
         float jt = -Vector2.dot(rv, tangentVel);
-        jt /= inverseMassSum;
-        jt /= contactCount;
+        jt /= (inverseMassSum * contactCount);
 
         if (Mathf.equal(jt, 0)) {
             return null;

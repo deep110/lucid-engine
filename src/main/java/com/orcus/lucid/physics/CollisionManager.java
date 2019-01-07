@@ -123,6 +123,7 @@ public class CollisionManager {
 
         // Collision normal needs to be flipped to point outside if circle was
         // inside the AABB
+        n.normalize();
         m.collisionNormal.set((inside) ? n.muli(-1) : n);
         m.penetrationDepth = r - d;
         m.contacts[0].set(a.position).addsi(m.collisionNormal, A.radius);
