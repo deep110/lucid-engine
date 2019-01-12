@@ -27,12 +27,20 @@ public class TestScene extends Scene {
     @Override
     public void start() {
         RigidBody b = new RigidBody(
-                new AABB(3f, 0.5f),
-                new Material(0.6f, 0.1f), // rock
+                new AABB(5f, 0.5f),
+                new Material(0.6f, 0.1f, 0.3f, 0.8f), // rock
                 renderToWorldCoordinate(new Vector2(346, 516))
         );
         b.setStatic();
         physicsWorld.addRigidBody(b);
+
+        RigidBody b2 = new RigidBody(
+                new Circle(0.1f),
+                new Material(0.6f, 0.1f), // rock
+                renderToWorldCoordinate(new Vector2(346, 216))
+        );
+        b2.setStatic();
+        physicsWorld.addRigidBody(b2);
     }
 
     @Override

@@ -37,10 +37,7 @@ public class CollisionManager {
         } else if (a.collider instanceof Circle && b.collider instanceof AABB) {
             collisionCircleAABB(m, a, b);
         } else {
-            collisionCircleAABB(m, b, a);
-            if (m.contactCount > 0) {
-                m.collisionNormal.negi();
-            }
+            collisionAABBCircle(m, a, b);
         }
     }
 
@@ -127,6 +124,60 @@ public class CollisionManager {
         m.collisionNormal.set((inside) ? n.muli(-1) : n);
         m.penetrationDepth = r - d;
         m.contacts[0].set(a.position).addsi(m.collisionNormal, A.radius);
+    }
+
+    private void collisionAABBCircle(Manifold m, RigidBody a, RigidBody b) {
+        AABB A = (AABB) a.collider;
+        Circle B = (Circle) b.collider;
+
+        Vector2 n = b.position.sub(a.position);
+
+        // Closest point on B to center of A
+        Vector2 closest = new Vector2(n);
+
+        // Calculate half extents along each axis
+        float x_extent = A.width / 2;
+        float y_extent = A.height / 2;
+
+        // Clamp point to edges of the AABB
+        closest.x = Mathf.clamp(-x_extent, x_extent, closest.x);
+        closest.y = Mathf.clamp(-y_extent, y_extent, closest.y);
+
+        boolean inside = false;
+
+        // Circle is inside the AABB, so we need to clamp the circle's center
+        // to the closest edge
+        if (n == closest) {
+            inside = true;
+
+            // Find closest axis
+            if (StrictMath.abs(n.x) > StrictMath.abs(n.y)) {
+                closest.x = Mathf.sign(closest.x) * x_extent;
+            } else { // y axis is shorter
+                // Clamp to closest extent
+                closest.y = Mathf.sign(closest.y) * y_extent;
+            }
+        }
+
+        Vector2 normal = n.sub(closest);
+        float d = normal.lengthSq();
+        float r = B.radius;
+
+        // Early out of the radius is shorter than distance to closest point and
+        // Circle not inside the AABB
+        if (d > r * r && !inside) {
+            return;
+        }
+        m.contactCount = 1;
+        // Avoided sqrt until we needed
+        d = (float) StrictMath.sqrt(d);
+
+        // Collision normal needs to be flipped to point outside if circle was
+        // inside the AABB
+        normal.set(Mathf.sign(normal.x), Mathf.sign(normal.y)).normalize();
+        m.collisionNormal.set((inside) ? normal.muli(-1) : normal);
+        m.penetrationDepth = r - d;
+        m.contacts[0].set(b.position).addsi(m.collisionNormal, -B.radius);
     }
 
     private void collisionAABBAABB(Manifold m, RigidBody a, RigidBody b) {
