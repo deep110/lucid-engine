@@ -5,6 +5,7 @@ import com.orcus.lucid.physics.RigidBody;
 
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
 
 /**
  * @author Deepankar Agrawal
@@ -27,17 +28,23 @@ public class Circle extends Collider {
 
     @Override
     public void render(RigidBody rigidBody, Graphics2D gr, float renderScalingFactor) {
-//        float rx = (float) StrictMath.cos(b.orient) * radius;
-//        float ry = (float) StrictMath.sin(b.orient) * radius;
+        float rx = (float) StrictMath.cos(rigidBody.orientation) * radius;
+        float ry = (float) StrictMath.sin(rigidBody.orientation) * radius;
         gr.setColor(Color.red);
         gr.draw(new Ellipse2D.Float(
-                (rigidBody.position.x - radius) * renderScalingFactor,
-                (rigidBody.position.y - radius) * renderScalingFactor,
-                radius * 2 * renderScalingFactor,
-                radius * 2 * renderScalingFactor
+                        (rigidBody.position.x - radius) * renderScalingFactor,
+                        (rigidBody.position.y - radius) * renderScalingFactor,
+                        radius * 2 * renderScalingFactor,
+                        radius * 2 * renderScalingFactor
                 )
         );
-//        gr.draw(new Line2D.Float(b.position.x, b.position.y, b.position.x + rx, b.position.y + ry));
+        gr.draw(new Line2D.Float(
+                        rigidBody.position.x * renderScalingFactor,
+                        rigidBody.position.y * renderScalingFactor,
+                        (rigidBody.position.x + rx) * renderScalingFactor,
+                        (rigidBody.position.y + ry) * renderScalingFactor
+                )
+        );
     }
 
     @Override
