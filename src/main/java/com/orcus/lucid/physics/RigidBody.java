@@ -51,6 +51,10 @@ public class RigidBody {
         this.force.addi(force);
     }
 
+    public void applyTorque(float torque) {
+        this.torque += torque;
+    }
+
     public void addImpulse(Vector2 impulse, Vector2 contactVector) {
 
         // V = V + (j ∗ n) / mass

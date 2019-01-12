@@ -51,7 +51,10 @@ public class Manifold {
 
         for (int i = 0; i < contactCount; ++i) {
 
-            Vector2 rv = B.velocity.sub(A.velocity);
+            Vector2 ra = contacts[i].sub(A.position);
+            Vector2 rb = contacts[i].sub(B.position);
+
+            Vector2 rv = calcEffectiveVelocity(B, rb).subi(calcEffectiveVelocity(A, ra));
 
             // Determine if we should perform a resting collision or not
             // The idea is if the only thing moving this object is gravity,
@@ -77,9 +80,9 @@ public class Manifold {
             Vector2 rb = contacts[i].sub(B.position);
 
             // Relative velocity
-            Vector2 rv = B.velocity.sub(A.velocity);
+            Vector2 rv = calcEffectiveVelocity(B, rb).subi(calcEffectiveVelocity(A, ra));
 
-            Vector2 normalImpulse = calcNormalImpulse(rv);
+            Vector2 normalImpulse = calcNormalImpulse(rv, ra, rb);
             if (normalImpulse == null) { // velocities are separating
                 return;
             }
@@ -90,7 +93,7 @@ public class Manifold {
             // Friction impulse
 
             // Recalculate relative velocity
-            rv = rv.set(B.velocity).subi(A.velocity);
+            rv = calcEffectiveVelocity(B, rb).subi(calcEffectiveVelocity(A, ra));
             Vector2 frictionImpulse = calcFrictionalImpulse(rv);
 
             if (frictionImpulse == null) {
@@ -99,8 +102,6 @@ public class Manifold {
 
             A.addImpulse(frictionImpulse.neg(), ra);
             B.addImpulse(frictionImpulse, rb);
-
-            // TODO: add rotation
         }
 
     }
@@ -117,14 +118,18 @@ public class Manifold {
     }
 
 
-    private Vector2 calcNormalImpulse(Vector2 rv) {
+    private Vector2 calcNormalImpulse(Vector2 rv, Vector2 ra, Vector2 rb) {
         // Relative velocity along the normal
         float contactVel = Vector2.dot(rv, collisionNormal);
         if (contactVel > 0) { // Do not resolve if velocities are separating
             return null;
         }
 
-        inverseMassSum = A.inverseMass + B.inverseMass;
+        float raCrossN = Vector2.cross(ra, collisionNormal);
+        float rbCrossN = Vector2.cross(rb, collisionNormal);
+        inverseMassSum = A.inverseMass + B.inverseMass
+                + (raCrossN * raCrossN) * A.inverseInertia
+                + (rbCrossN * rbCrossN) * B.inverseInertia;
 
         // Calculate impulse scalar
         normalImpulseMag = -(1.0f + e) * contactVel;
@@ -156,6 +161,11 @@ public class Manifold {
             return tangentVel.muli(normalImpulseMag * fd);
         }
 
+    }
+
+    private Vector2 calcEffectiveVelocity(RigidBody r, Vector2 contactDirection) {
+        // Vec2 effVel = B->velocity + Cross(B->angularVelocity, rb)
+        return r.velocity.add(Vector2.cross(r.angularVelocity, contactDirection, new Vector2()));
     }
 
 }

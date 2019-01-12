@@ -143,6 +143,7 @@ public class World {
         // v += (1/m * F) * dt
         body.velocity.addsi(body.force, body.inverseMass * dt);
         body.velocity.addsi(gravity, dt);
+        body.angularVelocity += body.torque * body.inverseInertia * dt;
     }
 
     private void integrateVelocity(RigidBody b, float dt) {
