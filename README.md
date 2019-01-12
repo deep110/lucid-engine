@@ -1,6 +1,8 @@
 # LucidEngine
 A basic physics2D engine for learning purposes.
 
+![](demo/output.gif)
+
 
 ### Project Structure
 The project is divided into two sections:
