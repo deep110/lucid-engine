@@ -1,5 +1,5 @@
 # LucidEngine
-A basic physics2D engine for learning purposes.
+A basic physics2D engine for learning purposes. For a detailed explaination see my blog [here](https://deep110.github.io/2019/implementing-2D-game-engine).
 
 ![](demo/output.gif)
 
@@ -7,15 +7,14 @@ A basic physics2D engine for learning purposes.
 ### Project Structure
 The project is divided into two sections:
 1. Physics Part
-    * Contains all the code for a stable physics simulation.
     * Like all physics engines, assumes all bodies are rigid bodies.
     * Right now all objects are instantiated as per required, not reusing the memory. But since
-    it is just a demo I probably wont be fixing that.
+    it is just a demo I probably won't be fixing that.
 
 2. Rendering Part
     * Handles the code for rendering collider shapes onto a window.
     * Contains a static camera and provides a scene interface like libGDX to interact with the physics world.
-    * Has own inbuilt code for handling inputs and game loop provided by [him](https://github.com/ClickerMonkey).
+    * Code for handling inputs and game loop is provided by [Philip Diffenderfer](https://github.com/ClickerMonkey).
 
 Both part can be used independently, but for demo purposes some code do overlap.
 
@@ -61,3 +60,7 @@ Mainly simulation consists of three steps
       Friction force is less than or equal to normal force on the surface multiplied by μ.
       Check is performed using static friction coefficient but value is taken to be of dynamic
       coefficient.
+
+### TODO
+1. Fix non balanced impulses
+2. Add convex polygon for handling rotation properly
