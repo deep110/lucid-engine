@@ -1,5 +1,5 @@
 # LucidEngine
-A basic physics2D engine for learning purposes. For a detailed explaination see my blog [here](https://deep110.github.io/2019/implementing-2D-game-engine).
+A basic physics2D engine for learning purposes. For a detailed explanation see my blog [here](https://deep110.github.io/posts/blogs/2019-01-13-implementing-2D-game-engine.html).
 
 ![](demo/output.gif)
 

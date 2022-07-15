@@ -1,0 +1,47 @@
+{
+    "name": "lucid",
+    "version": "0.1.0",
+    "description": "3D physics engine in Javascript for learning Purposes",
+    "main": "build/lucid.min.js",
+    "repository": "https://github.com/deep110/lucid-engine",
+    "jsnext:main": "build/lucid.module.js",
+    "module": "build/lucid.module.js",
+    "files": [
+        "package.json",
+        "LICENSE",
+        "README.md",
+        "build/lucid.js",
+        "build/lucid.min.js",
+        "build/lucid.module.js",
+        "src",
+        "examples/js"
+    ],
+    "eslintConfig": {
+        "extends": "mdcs"
+    },
+    "scripts": {
+        "build": "rollup -c",
+        "build-uglify": "rollup -c && terser build/lucid.js -c -m -b beautify=false,preamble=\"'// @author Deepankar Agrawal'\" > build/lucid.min.js",
+        "dev": "rollup -c -w",
+        "lint": "eslint src",
+        "test": "echo \"Error: No test specified!\" && exit 1"
+    },
+    "keywords": [
+        "lucid",
+        "physics",
+        "3d"
+    ],
+    "author": "deep110",
+    "license": "MIT",
+    "homepage": "https://github.com/lucid-engine/",
+    "bugs": {
+        "url": "https://github.com/lucid-engine/issues/"
+    },
+    "devDependencies": {
+        "eslint": "latest",
+        "eslint-config-mdcs": "latest",
+        "rollup": "latest",
+        "rollup-watch": "latest",
+        "terser": "latest"
+    }
+}
