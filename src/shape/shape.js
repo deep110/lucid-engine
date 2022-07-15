@@ -1,7 +1,11 @@
 class Shape {
-    constructor() {
-        this.test = 0;
-    }
+
+	constructor() {
+
+		this.test = 0;
+
+	}
+
 }
 
 export { Shape };

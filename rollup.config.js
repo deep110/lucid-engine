@@ -4,7 +4,7 @@ export default {
 	output: [
 		{
 			format: 'umd',
-			name: 'Lucid',
+			name: 'LUCID',
 			file: 'build/lucid.js'
 		},
 		{

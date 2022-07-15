@@ -17,7 +17,28 @@
         "examples/js"
     ],
     "eslintConfig": {
-        "extends": "mdcs"
+        "extends": "mdcs",
+        "parserOptions": {
+            "ecmaVersion": 13
+        },
+        "rules": {
+            "space-in-parens": "off",
+            "padded-blocks": "off",
+            "space-unary-ops": [
+                "error",
+                {
+                    "words": true,
+                    "nonwords": false
+                }
+            ],
+            "computed-property-spacing": [
+                "error",
+                "never",
+                {
+                    "enforceForClassMembers": true
+                }
+            ]
+        }
     },
     "scripts": {
         "build": "rollup -c",

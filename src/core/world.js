@@ -1,7 +1,10 @@
 class World {
-    constructor() {
+	constructor(params) {
+		if (!(params instanceof Object)) params = {};
 
-    }
+		console.log(params);
+	}
+
 }
 
 export { World };
