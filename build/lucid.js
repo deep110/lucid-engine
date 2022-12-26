@@ -373,27 +373,82 @@
 
 	class RigidBody {
 
-		constructor() {
+		constructor(params) {
+			if (!(params instanceof Object)) params = {};
+
 			this.position = new Vec3();
+			if (params.position !== undefined) this.position.fromArray(params.position);
+
 			this.velocity = new Vec3();
 			this.force = new Vec3();
 
 			this.mass = 0;
 			this.invMass = 0;
+
+			// type: LUCID.SHAPE_SPHERE,
+			// size: [1, 1, 1], // size of shape
+			// rotation: [0, 0, 90], // start rotation in degree
+			// move: true, // dynamic or static
+			// density: 1,
+			// friction: 0.2,
+			// restitution: 0.2,
+		}
+
+		getPosition() {
+			return this.position;
+		}
+
+		getQuaternion() {
+			// return 
+		}
+
+		temp() {
+			this.position.y += 0.1;
 		}
 
 	}
 
 	class World {
-	    constructor(params) {
-	        if (!(params instanceof Object)) params = {};
+		constructor(params) {
+			if (!(params instanceof Object)) params = {};
 
-	        console.log(params);
-	    }
+			this.timestep = params.timestep || 1 / 60;
+			this.iterations = params.iterations || 8;
 
-	    #temp_fuc() {
+			this.scale = params.worldscale || 1;
+			this.invScale = 1 / this.scale;
 
-	    }
+			// set gravity
+			this.gravity = new Vec3(0, -9.8, 0);
+			if (params.gravity !== undefined) this.gravity.fromArray(params.gravity);
+
+			this.rigidbodies = [];
+			this.numRigidbodies = 0;
+		}
+
+		step() {
+			this.rigidbodies[0].temp();
+		}
+
+		setGravity(grArr) {
+			this.gravity.fromArray(grArr);
+		}
+
+		addRigidbody(bodyParams) {
+			let rb = new RigidBody(bodyParams);
+			this.rigidbodies.push(rb);
+
+			return rb;
+		}
+
+		removeRigidbody() {
+
+		}
+
+		getNumRigidbodies() {
+			return this.rigidbodies.length;
+		}
+
 	}
 
 	exports.AABB_PROX = AABB_PROX;

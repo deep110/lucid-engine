@@ -45,7 +45,7 @@ input[type='button']:hover {
     position: absolute;
     left: 10px;
     top: 10px;
-    width: 30%;
+    width: 20%;
     height: 80px;
     background-color: #11bcff1f;
 }
@@ -55,7 +55,7 @@ input[type='button']:hover {
     position: absolute;
     left: 10px;
     top: 100px;
-    width: 30%;
+    width: 20%;
     height: 400px;
     font-family: monospace;
     background-color: #40ff001f;
