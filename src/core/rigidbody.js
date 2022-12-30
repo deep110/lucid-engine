@@ -19,15 +19,15 @@ class RigidBody {
 		this.shape = this.createShape(params.type, {
 			friction: params.friction || 0.2,
 			restitution: params.restitution || 0.2,
+			density: params.density || 1,
 		});
 
-		this.mass = 0;
-		this.invMass = 0;
+		this.mass = (this.shape) ? this.shape.calculateMass() : 0;
+		this.invMass = 1 / this.mass;
 
-		// size: [1, 1, 1], // size of shape
+		this.move = params.move;
+
 		// rotation: [0, 0, 90], // start rotation in degree
-		// move: true, // dynamic or static
-		// density: 1,
 	}
 
 	getPosition() {
@@ -44,11 +44,6 @@ class RigidBody {
 				return new Box(config);
 		}
 	}
-
-	temp() {
-		this.position.y += 0.1;
-	}
-
 }
 
 export { RigidBody };

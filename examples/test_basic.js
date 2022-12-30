@@ -1,5 +1,5 @@
 // constants
-const FPS = 1;
+const FPS = 20;
 
 // initialize canvas
 let canvas = document.getElementById("canvas");
@@ -21,7 +21,7 @@ var meshes = [];
 var bodies = [];
 
 initializeScene();
-update();
+setInterval(update, (1/FPS) * 1000);
 
 // update
 function update() {
@@ -30,7 +30,6 @@ function update() {
 
 	// re-render the scene
 	renderer.render(scene, camera);
-	requestAnimationFrame(update);
 }
 
 
@@ -48,8 +47,8 @@ function initializeScene() {
 	// add a box
 	var body = world.addRigidbody({
 		type: LUCID.SHAPE_BOX,
-		size: [1, 1, 1], // size of shape
-		position: [0, 4, 0], // start position in degree
+		scale: [1, 1, 1], // size of shape
+		position: [0, 20, 0], // start position in degree
 		move: true, // dynamic or static
 		friction: 0.6,
 	});
@@ -85,10 +84,11 @@ function setupRenderingStuff() {
 	let ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
 	scene.add(ambientLight);
 
-	const axesHelper = new THREE.AxesHelper(10);
+	const axesHelper = new THREE.AxesHelper(30);
 	scene.add(axesHelper);
 
-	camera.position.set(8, 8, 8);
+	const dist = 25;
+	camera.position.set(dist, dist, dist);
 
 	// setup orbit
 	controls = new THREE.OrbitControls(camera, canvas);
@@ -100,12 +100,13 @@ function setupRenderingStuff() {
 
 
 function addGround() {
-	var geometry = new THREE.BoxGeometry(10, 1, 10);
+	var size = 20;
+	var geometry = new THREE.BoxGeometry(size, 1, size);
 	var material = new THREE.MeshStandardMaterial({ color: 0xffffff });
 
 	var body = world.addRigidbody({
 		type: LUCID.SHAPE_BOX,
-		size: [10, 1, 10],
+		size: [size, 1, size],
 		position: [0, 0, 0],
 		move: false,
 	});

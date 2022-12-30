@@ -60,6 +60,15 @@ class Vec3 {
 		return this;
 	}
 
+	/**
+	 * 
+	 * @param {Vec3} v vector to use for scale
+	 * @param {Number} s scalar value to multiply
+	 * 
+	 * Performs operation: vec x = vec v * s
+	 * 
+	 * @returns Scaled Vector
+	 */
 	scale(v, s) {
 		this.x = v.x * s;
 		this.y = v.y * s;
@@ -268,6 +277,12 @@ class Vec3 {
 		this.y = array[offset + 1];
 		this.z = array[offset + 2];
 		return this;
+	}
+
+	reset() {
+		this.x = 0;
+		this.y = 0;
+		this.z = 0;
 	}
 
 }

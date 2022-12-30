@@ -143,6 +143,15 @@ class Vec3 {
 		return this;
 	}
 
+	/**
+	 * 
+	 * @param {Vec3} v vector to use for scale
+	 * @param {Number} s scalar value to multiply
+	 * 
+	 * Performs operation: vec x = vec v * s
+	 * 
+	 * @returns Scaled Vector
+	 */
 	scale(v, s) {
 		this.x = v.x * s;
 		this.y = v.y * s;
@@ -353,12 +362,19 @@ class Vec3 {
 		return this;
 	}
 
+	reset() {
+		this.x = 0;
+		this.y = 0;
+		this.z = 0;
+	}
+
 }
 
 class Shape {
 
 	constructor(config) {
 
+		this.density = config.density;
 		this.friction = config.friction;
 		this.restitution = config.restitution;
 
@@ -378,6 +394,7 @@ class Box extends Shape {
 
 	calculateMass() {
 		console.log("Box: Mass Info called");
+        return 1;
 	}
 
 }
@@ -398,15 +415,15 @@ class RigidBody {
 		this.shape = this.createShape(params.type, {
 			friction: params.friction || 0.2,
 			restitution: params.restitution || 0.2,
+			density: params.density || 1,
 		});
 
-		this.mass = 0;
-		this.invMass = 0;
+		this.mass = (this.shape) ? this.shape.calculateMass() : 0;
+		this.invMass = 1 / this.mass;
 
-		// size: [1, 1, 1], // size of shape
+		this.move = params.move;
+
 		// rotation: [0, 0, 90], // start rotation in degree
-		// move: true, // dynamic or static
-		// density: 1,
 	}
 
 	getPosition() {
@@ -423,11 +440,6 @@ class RigidBody {
 				return new Box(config);
 		}
 	}
-
-	temp() {
-		this.position.y += 0.1;
-	}
-
 }
 
 class World {
@@ -448,7 +460,28 @@ class World {
 	}
 
 	step() {
-		// this.rigidbodies[0].temp();
+		// apply gravity force
+		for (var i = 0; i < this.rigidbodies.length; i++) {
+			var body = this.rigidbodies[i];
+			if (body.move) {
+				body.force.addScaledVector(this.gravity, body.mass);
+			}
+		}
+
+		// resolve collisions
+		// recalculate the net force on body from other objects
+
+		// update velocity & position
+		for (var i = 0; i < this.rigidbodies.length; i++) {
+			var body = this.rigidbodies[i];
+			if (body.move) {
+				body.velocity.addScaledVector(body.force, body.invMass * this.timestep);
+				body.position.addScaledVector(body.velocity, world.timestep);
+
+				// reset force
+				body.force.reset();
+			}
+		}
 	}
 
 	setGravity(grArr) {

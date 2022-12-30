@@ -9,6 +9,7 @@ class Box extends Shape {
 
 	calculateMass() {
 		console.log("Box: Mass Info called");
+        return 1;
 	}
 
 }

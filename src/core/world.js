@@ -19,7 +19,28 @@ class World {
 	}
 
 	step() {
-		// this.rigidbodies[0].temp();
+		// apply gravity force
+		for (var i = 0; i < this.rigidbodies.length; i++) {
+			var body = this.rigidbodies[i];
+			if (body.move) {
+				body.force.addScaledVector(this.gravity, body.mass);
+			}
+		}
+
+		// resolve collisions
+		// recalculate the net force on body from other objects
+
+		// update velocity & position
+		for (var i = 0; i < this.rigidbodies.length; i++) {
+			var body = this.rigidbodies[i];
+			if (body.move) {
+				body.velocity.addScaledVector(body.force, body.invMass * this.timestep);
+				body.position.addScaledVector(body.velocity, world.timestep);
+
+				// reset force
+				body.force.reset();
+			}
+		}
 	}
 
 	setGravity(grArr) {
