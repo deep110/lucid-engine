@@ -3,13 +3,13 @@ import { Shape } from "./shape";
 
 class Box extends Shape {
 
-    constructor(config) {
-        super(config);
-    }
+	constructor(config) {
+		super(config);
+	}
 
-    calculateMass() {
-        console.log("Box: Mass Info called");
-    }
+	calculateMass() {
+		console.log("Box: Mass Info called");
+	}
 
 }
 

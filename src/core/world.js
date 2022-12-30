@@ -16,11 +16,10 @@ class World {
 		if (params.gravity !== undefined) this.gravity.fromArray(params.gravity);
 
 		this.rigidbodies = [];
-		this.numRigidbodies = 0;
 	}
 
 	step() {
-		this.rigidbodies[0].temp();
+		// this.rigidbodies[0].temp();
 	}
 
 	setGravity(grArr) {
@@ -33,13 +32,13 @@ class World {
 			console.error("Rigidbody of shape: ", bodyParams.shape, " cannot be created");
 			return;
 		}
+
 		this.rigidbodies.push(rb);
 
 		return rb;
 	}
 
 	removeRigidbody() {
-
 	}
 
 	getNumRigidbodies() {

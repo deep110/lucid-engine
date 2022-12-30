@@ -1,6 +1,6 @@
 import { MathUtil } from "../math/math";
 import { Vec3 } from "../math/vec3";
-import { SHAPE_BOX } from "../constants"
+import { SHAPE_BOX } from "../constants";
 import { Box } from "../shape/box";
 
 class RigidBody {
@@ -35,7 +35,7 @@ class RigidBody {
 	}
 
 	getQuaternion() {
-		// return 
+		// return
 	}
 
 	createShape(type, config) {

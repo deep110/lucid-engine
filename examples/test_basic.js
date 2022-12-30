@@ -38,18 +38,27 @@ function initializeScene() {
 	setupRenderingStuff();
 
 	const sphereGeometry = new THREE.SphereGeometry(1, 12, 8);
-	const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+	const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
 
-	// add a sphere
-	bodies[0] = world.addRigidbody({
+	const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+	const boxMaterial = new THREE.MeshStandardMaterial({ color: 0xff00ff });
+
+	addGround();
+
+	// add a box
+	var body = world.addRigidbody({
 		type: LUCID.SHAPE_BOX,
 		size: [1, 1, 1], // size of shape
-		position: [0, 0, 0], // start position in degree
+		position: [0, 4, 0], // start position in degree
 		move: true, // dynamic or static
 		friction: 0.6,
 	});
-	meshes[0] = new THREE.Mesh(sphereGeometry, sphereMaterial);
-	scene.add(meshes[0]);
+	bodies.push(body);
+
+	var mesh = new THREE.Mesh(boxGeometry, boxMaterial);
+	meshes.push(mesh);
+
+	scene.add(mesh);
 }
 
 
@@ -79,7 +88,7 @@ function setupRenderingStuff() {
 	const axesHelper = new THREE.AxesHelper(10);
 	scene.add(axesHelper);
 
-	camera.position.set(10, 10, 10);
+	camera.position.set(8, 8, 8);
 
 	// setup orbit
 	controls = new THREE.OrbitControls(camera, canvas);
@@ -87,4 +96,23 @@ function setupRenderingStuff() {
 	controls.addEventListener('change', () => {
 		renderer.render(scene, camera);
 	});
+}
+
+
+function addGround() {
+	var geometry = new THREE.BoxGeometry(10, 1, 10);
+	var material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+
+	var body = world.addRigidbody({
+		type: LUCID.SHAPE_BOX,
+		size: [10, 1, 10],
+		position: [0, 0, 0],
+		move: false,
+	});
+	bodies.push(body);
+
+	var mesh = new THREE.Mesh(geometry, material);
+	meshes.push(mesh);
+
+	scene.add(mesh);
 }

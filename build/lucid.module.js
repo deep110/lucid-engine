@@ -372,13 +372,13 @@ class Shape {
 
 class Box extends Shape {
 
-    constructor(config) {
-        super(config);
-    }
+	constructor(config) {
+		super(config);
+	}
 
-    calculateMass() {
-        console.log("Box: Mass Info called");
-    }
+	calculateMass() {
+		console.log("Box: Mass Info called");
+	}
 
 }
 
@@ -414,7 +414,7 @@ class RigidBody {
 	}
 
 	getQuaternion() {
-		// return 
+		// return
 	}
 
 	createShape(type, config) {
@@ -445,11 +445,10 @@ class World {
 		if (params.gravity !== undefined) this.gravity.fromArray(params.gravity);
 
 		this.rigidbodies = [];
-		this.numRigidbodies = 0;
 	}
 
 	step() {
-		this.rigidbodies[0].temp();
+		// this.rigidbodies[0].temp();
 	}
 
 	setGravity(grArr) {
@@ -462,13 +461,13 @@ class World {
 			console.error("Rigidbody of shape: ", bodyParams.shape, " cannot be created");
 			return;
 		}
+
 		this.rigidbodies.push(rb);
 
 		return rb;
 	}
 
 	removeRigidbody() {
-
 	}
 
 	getNumRigidbodies() {
