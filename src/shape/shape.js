@@ -1,9 +1,14 @@
 class Shape {
 
-	constructor() {
+	constructor(config) {
 
-		this.test = 0;
+		this.friction = config.friction;
+		this.restitution = config.restitution;
 
+	}
+
+	calculateMass() {
+		console.error("Shape: Inheritance Error");
 	}
 
 }

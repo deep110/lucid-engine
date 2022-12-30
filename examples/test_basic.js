@@ -42,10 +42,11 @@ function initializeScene() {
 
 	// add a sphere
 	bodies[0] = world.addRigidbody({
-		type: LUCID.SHAPE_SPHERE,
+		type: LUCID.SHAPE_BOX,
 		size: [1, 1, 1], // size of shape
 		position: [0, 0, 0], // start position in degree
 		move: true, // dynamic or static
+		friction: 0.6,
 	});
 	meshes[0] = new THREE.Mesh(sphereGeometry, sphereMaterial);
 	scene.add(meshes[0]);

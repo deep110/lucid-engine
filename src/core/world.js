@@ -29,6 +29,10 @@ class World {
 
 	addRigidbody(bodyParams) {
 		let rb = new RigidBody(bodyParams);
+		if (rb.shape == undefined) {
+			console.error("Rigidbody of shape: ", bodyParams.shape, " cannot be created");
+			return;
+		}
 		this.rigidbodies.push(rb);
 
 		return rb;

@@ -363,11 +363,28 @@
 
 	class Shape {
 
-		constructor() {
+		constructor(config) {
 
-			this.test = 0;
+			this.friction = config.friction;
+			this.restitution = config.restitution;
 
 		}
+
+		calculateMass() {
+			console.error("Shape: Inheritance Error");
+		}
+
+	}
+
+	class Box extends Shape {
+
+	    constructor(config) {
+	        super(config);
+	    }
+
+	    calculateMass() {
+	        console.log("Box: Mass Info called");
+	    }
 
 	}
 
@@ -376,22 +393,26 @@
 		constructor(params) {
 			if (!(params instanceof Object)) params = {};
 
+			this.id = MathUtil.generateUUID();
+
 			this.position = new Vec3();
 			if (params.position !== undefined) this.position.fromArray(params.position);
 
 			this.velocity = new Vec3();
 			this.force = new Vec3();
 
+			this.shape = this.createShape(params.type, {
+				friction: params.friction || 0.2,
+				restitution: params.restitution || 0.2,
+			});
+
 			this.mass = 0;
 			this.invMass = 0;
 
-			// type: LUCID.SHAPE_SPHERE,
 			// size: [1, 1, 1], // size of shape
 			// rotation: [0, 0, 90], // start rotation in degree
 			// move: true, // dynamic or static
 			// density: 1,
-			// friction: 0.2,
-			// restitution: 0.2,
 		}
 
 		getPosition() {
@@ -400,6 +421,13 @@
 
 		getQuaternion() {
 			// return 
+		}
+
+		createShape(type, config) {
+			switch (type) {
+				case SHAPE_BOX:
+					return new Box(config);
+			}
 		}
 
 		temp() {
@@ -436,6 +464,10 @@
 
 		addRigidbody(bodyParams) {
 			let rb = new RigidBody(bodyParams);
+			if (rb.shape == undefined) {
+				console.error("Rigidbody of shape: ", bodyParams.shape, " cannot be created");
+				return;
+			}
 			this.rigidbodies.push(rb);
 
 			return rb;
@@ -461,6 +493,7 @@
 	exports.BR_BRUTE_FORCE = BR_BRUTE_FORCE;
 	exports.BR_NULL = BR_NULL;
 	exports.BR_SWEEP_AND_PRUNE = BR_SWEEP_AND_PRUNE;
+	exports.Box = Box;
 	exports.JOINT_BALL_AND_SOCKET = JOINT_BALL_AND_SOCKET;
 	exports.JOINT_DISTANCE = JOINT_DISTANCE;
 	exports.JOINT_HINGE = JOINT_HINGE;
@@ -476,7 +509,6 @@
 	exports.SHAPE_PLANE = SHAPE_PLANE;
 	exports.SHAPE_SPHERE = SHAPE_SPHERE;
 	exports.SHAPE_TETRA = SHAPE_TETRA;
-	exports.Shape = Shape;
 	exports.Vec3 = Vec3;
 	exports.World = World;
 
