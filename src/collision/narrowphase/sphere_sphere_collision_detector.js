@@ -1,10 +1,8 @@
 import { CollisionDetector } from "./collision_detector";
 
-class BoxBoxCollisionDetector extends CollisionDetector {
+export class SphereSphereCollisionDetector extends CollisionDetector {
 
 	detectCollision(colliderA, colliderB, manifold) {
 
 	}
 }
-
-export { BoxBoxCollisionDetector };

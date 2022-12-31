@@ -1,5 +1,14 @@
 import { RigidBody } from "./rigidbody";
 import { Vec3 } from "../math/vec3";
+import { SHAPE_BOX, SHAPE_SPHERE, SHAPE_PLANE } from "../constants";
+
+import { BoxCollider } from "../collider/box_collider";
+import { SphereCollider } from "../collider/sphere_collider";
+import { PlaneCollider } from "../collider/plane_collider";
+
+import { SphereSphereCollisionDetector } from "../collision/narrowphase/sphere_sphere_collision_detector";
+import { SpherePlaneCollisionDetector } from "../collision/narrowphase/sphere_plane_collision_detector";
+import { Manifold } from "./manifold";
 
 class World {
 	constructor(params) {
@@ -16,6 +25,11 @@ class World {
 		if (params.gravity !== undefined) this.gravity.fromArray(params.gravity);
 
 		this.rigidbodies = [];
+
+		this.detector = [{}, {}, {}, {}, {}];
+		this.detector[SHAPE_SPHERE][SHAPE_SPHERE] = new SphereSphereCollisionDetector();
+		this.detector[SHAPE_SPHERE][SHAPE_PLANE] = new SpherePlaneCollisionDetector();
+		this.detector[SHAPE_PLANE][SHAPE_SPHERE] = new SpherePlaneCollisionDetector(true);
 	}
 
 	step() {
@@ -28,14 +42,14 @@ class World {
 		}
 
 		// resolve collisions
-		// recalculate the net force on body from other objects
+		this.resolveCollisions();
 
 		// update velocity & position
 		for (var i = 0; i < this.rigidbodies.length; i++) {
 			var body = this.rigidbodies[i];
 			if (body.move) {
-				body.velocity.addScaledVector(body.force, body.invMass * this.timestep);
-				body.position.addScaledVector(body.velocity, world.timestep);
+				body.linearVelocity.addScaledVector(body.force, body.invMass * this.timestep);
+				body.position.addScaledVector(body.linearVelocity, world.timestep);
 
 				// reset force
 				body.force.reset();
@@ -48,14 +62,16 @@ class World {
 	}
 
 	addRigidbody(bodyParams) {
-		let rb = new RigidBody(bodyParams);
-		if (rb.shape == undefined) {
-			console.error("Rigidbody of shape: ", bodyParams.shape, " cannot be created");
+		let collider = this._createCollider(bodyParams);
+		if (collider == undefined) {
+			console.error("Collider of shape: ", bodyParams.shape, " cannot be created");
 			return;
 		}
 
-		this.rigidbodies.push(rb);
+		let rb = new RigidBody(bodyParams);
+		rb.addCollider(collider);
 
+		this.rigidbodies.push(rb);
 		return rb;
 	}
 
@@ -64,6 +80,45 @@ class World {
 
 	getNumRigidbodies() {
 		return this.rigidbodies.length;
+	}
+
+	resolveCollisions() {
+		var numBodies = this.rigidbodies.length;
+		var collisions = [];
+
+		for (var i = 0; i < numBodies; i++) {
+			for (var j = i+1; j < numBodies; j++) {
+				var bodyA = this.rigidbodies[i];
+				var bodyB = this.rigidbodies[j];
+
+				var detector = this.detector[bodyA.collider.shape][bodyB.collider.shape];
+				var manifold = new Manifold(bodyA, bodyB);
+
+				detector.detectCollision(bodyA.collider, bodyB.collider, manifold);
+				if (manifold.hasCollision) {
+					console.log("Collision Detected: ", manifold);
+					collisions.push(manifold);
+				} else {
+					console.log("No collision");
+				}
+			}
+		}
+
+		// solve collisions
+
+		// impulse solver
+		// position correction
+	}
+
+	_createCollider(config) {
+		switch (config.shape) {
+			case SHAPE_BOX:
+				return new BoxCollider(SHAPE_BOX, config);
+			case SHAPE_SPHERE:
+				return new SphereCollider(SHAPE_SPHERE, config);
+			case SHAPE_PLANE:
+				return new PlaneCollider(SHAPE_PLANE, config);
+		}
 	}
 
 }

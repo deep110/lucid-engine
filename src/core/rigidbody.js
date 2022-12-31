@@ -1,7 +1,7 @@
 import { MathUtil } from "../math/math";
 import { Vec3 } from "../math/vec3";
-import { SHAPE_BOX } from "../constants";
-import { Box } from "../shape/box";
+import { Quaternion } from "../math/quat";
+
 
 class RigidBody {
 
@@ -9,25 +9,25 @@ class RigidBody {
 		if (!(params instanceof Object)) params = {};
 
 		this.id = MathUtil.generateUUID();
-
 		this.position = new Vec3();
+		this.orientation = new Quaternion();
+		this.rotation = new Vec3();
+
 		if (params.position !== undefined) this.position.fromArray(params.position);
+		if (params.rotation !== undefined) {
+			this.rotation.fromArray(params.rotation);
+			this.orientation.fromEuler(this.rotation);
+		}
 
-		this.velocity = new Vec3();
 		this.force = new Vec3();
+		this.linearVelocity = new Vec3();
+		this.angularVelocity = new Vec3();
 
-		this.shape = this.createShape(params.type, {
-			friction: params.friction || 0.2,
-			restitution: params.restitution || 0.2,
-			density: params.density || 1,
-		});
-
-		this.mass = (this.shape) ? this.shape.calculateMass() : 0;
+		this.mass = 1;
 		this.invMass = 1 / this.mass;
-
 		this.move = params.move;
 
-		// rotation: [0, 0, 90], // start rotation in degree
+		this.collider = undefined;
 	}
 
 	getPosition() {
@@ -35,15 +35,13 @@ class RigidBody {
 	}
 
 	getQuaternion() {
-		// return
+		return this.orientation;
 	}
 
-	createShape(type, config) {
-		switch (type) {
-			case SHAPE_BOX:
-				return new Box(config);
-		}
+	addCollider(collider) {
+		this.collider = collider;
 	}
+
 }
 
 export { RigidBody };

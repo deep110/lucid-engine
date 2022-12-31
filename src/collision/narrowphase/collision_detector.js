@@ -1,5 +1,5 @@
 class CollisionDetector {
-	detectCollision(shapeA, shapeB, manifold) {
+	detectCollision(colliderA, colliderB, manifold) {
 		throw new Error("Collision Detector: Inheritance Error");
 	}
 }

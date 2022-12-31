@@ -1,27 +1,14 @@
 // Body type
-export var BODY_NULL = 0;
-export var BODY_DYNAMIC = 1;
-export var BODY_STATIC = 2;
-export var BODY_KINEMATIC = 3;
-export var BODY_GHOST = 4;
+export var BODY_DYNAMIC = 0;
+export var BODY_STATIC = 1;
+export var BODY_KINEMATIC = 2;
 
 // Shape type
-export var SHAPE_NULL = 0;
-export var SHAPE_SPHERE = 1;
+export var SHAPE_SPHERE = 0;
+export var SHAPE_PLANE = 1;
 export var SHAPE_BOX = 2;
 export var SHAPE_CYLINDER = 3;
-export var SHAPE_PLANE = 4;
-export var SHAPE_PARTICLE = 5;
-export var SHAPE_TETRA = 6;
-
-// Joint type
-export var JOINT_NULL = 0;
-export var JOINT_DISTANCE = 1;
-export var JOINT_BALL_AND_SOCKET = 2;
-export var JOINT_HINGE = 3;
-export var JOINT_WHEEL = 4;
-export var JOINT_SLIDER = 5;
-export var JOINT_PRISMATIC = 6;
+export var SHAPE_POLYGON = 4;
 
 // BroadPhase
 export var BR_NULL = 0;

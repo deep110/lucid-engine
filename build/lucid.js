@@ -5,29 +5,16 @@
 })(this, (function (exports) { 'use strict';
 
 	// Body type
-	var BODY_NULL = 0;
-	var BODY_DYNAMIC = 1;
-	var BODY_STATIC = 2;
-	var BODY_KINEMATIC = 3;
-	var BODY_GHOST = 4;
+	var BODY_DYNAMIC = 0;
+	var BODY_STATIC = 1;
+	var BODY_KINEMATIC = 2;
 
 	// Shape type
-	var SHAPE_NULL = 0;
-	var SHAPE_SPHERE = 1;
+	var SHAPE_SPHERE = 0;
+	var SHAPE_PLANE = 1;
 	var SHAPE_BOX = 2;
 	var SHAPE_CYLINDER = 3;
-	var SHAPE_PLANE = 4;
-	var SHAPE_PARTICLE = 5;
-	var SHAPE_TETRA = 6;
-
-	// Joint type
-	var JOINT_NULL = 0;
-	var JOINT_DISTANCE = 1;
-	var JOINT_BALL_AND_SOCKET = 2;
-	var JOINT_HINGE = 3;
-	var JOINT_WHEEL = 4;
-	var JOINT_SLIDER = 5;
-	var JOINT_PRISMATIC = 6;
+	var SHAPE_POLYGON = 4;
 
 	// BroadPhase
 	var BR_NULL = 0;
@@ -376,33 +363,49 @@
 
 	}
 
-	class Shape {
+	class Quaternion {
 
-		constructor(config) {
-
-			this.density = config.density;
-			this.friction = config.friction;
-			this.restitution = config.restitution;
-
+		constructor(x, y, z, w) {
+			this.x = x || 0;
+			this.y = y || 0;
+			this.z = z || 0;
+			this.w = w || 1;
 		}
 
-		calculateMass() {
-			console.error("Shape: Inheritance Error");
+		set(x, y, z, w) {
+			this.x = x;
+			this.y = y;
+			this.z = z;
+			this.w = w;
+			return this;
 		}
 
-	}
-
-	class Box extends Shape {
-
-		constructor(config) {
-			super(config);
+		length() {
+			return MathUtil.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
 		}
 
-		calculateMass() {
-			console.log("Box: Mass Info called");
-	        return 1;
+		lengthSq() {
+			return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
 		}
 
+		copy(q) {        
+			this.x = q.x;
+			this.y = q.y;
+			this.z = q.z;
+			this.w = q.w;
+			return this;
+		}
+
+		clone() {
+			return new Quat(this.x, this.y, this.z, this.w);
+		}
+
+		fromEuler(v) {
+			this.x = MathUtil.cos(v.z/2) * MathUtil.cos(v.y/2) * MathUtil.sin(v.x/2) - MathUtil.sin(v.z/2) * MathUtil.sin(v.y/2) * MathUtil.cos(v.x/2);
+			this.y = MathUtil.cos(v.z/2) * MathUtil.sin(v.y/2) * MathUtil.cos(v.x/2) + MathUtil.sin(v.z/2) * MathUtil.cos(v.y/2) * MathUtil.sin(v.x/2);
+			this.z = MathUtil.sin(v.z/2) * MathUtil.cos(v.y/2) * MathUtil.cos(v.x/2) - MathUtil.cos(v.z/2) * MathUtil.sin(v.y/2) * MathUtil.sin(v.x/2);
+			this.w = MathUtil.cos(v.z/2) * MathUtil.cos(v.y/2) * MathUtil.cos(v.x/2) + MathUtil.sin(v.z/2) * MathUtil.sin(v.y/2) * MathUtil.sin(v.x/2);
+		}
 	}
 
 	class RigidBody {
@@ -411,25 +414,25 @@
 			if (!(params instanceof Object)) params = {};
 
 			this.id = MathUtil.generateUUID();
-
 			this.position = new Vec3();
+			this.orientation = new Quaternion();
+			this.rotation = new Vec3();
+
 			if (params.position !== undefined) this.position.fromArray(params.position);
+			if (params.rotation !== undefined) {
+				this.rotation.fromArray(params.rotation);
+				this.orientation.fromEuler(this.rotation);
+			}
 
-			this.velocity = new Vec3();
 			this.force = new Vec3();
+			this.linearVelocity = new Vec3();
+			this.angularVelocity = new Vec3();
 
-			this.shape = this.createShape(params.type, {
-				friction: params.friction || 0.2,
-				restitution: params.restitution || 0.2,
-				density: params.density || 1,
-			});
-
-			this.mass = (this.shape) ? this.shape.calculateMass() : 0;
+			this.mass = 1;
 			this.invMass = 1 / this.mass;
-
 			this.move = params.move;
 
-			// rotation: [0, 0, 90], // start rotation in degree
+			this.collider = undefined;
 		}
 
 		getPosition() {
@@ -437,15 +440,94 @@
 		}
 
 		getQuaternion() {
-			// return
+			return this.orientation;
 		}
 
-		createShape(type, config) {
-			switch (type) {
-				case SHAPE_BOX:
-					return new Box(config);
-			}
+		addCollider(collider) {
+			this.collider = collider;
 		}
+
+	}
+
+	class Collider {
+
+		constructor(shape, config) {
+			this.shape = shape;
+
+			this.density = config.density || 1;
+			this.friction = config.friction || 0.2;
+			this.restitution = config.restitution || 0.6;
+
+		}
+
+	}
+
+	class BoxCollider extends Collider {
+
+		constructor(shape, config) {
+			super(shape, config);
+		}
+
+	}
+
+	class SphereCollider extends Collider {
+	    constructor(shape, config) {
+	        super(shape, config);
+
+	        // this.radius = config.scale;
+	    }
+	}
+
+	class PlaneCollider extends Collider {
+	    constructor(shape, config) {
+	        super(shape, config);
+	    }
+	}
+
+	class CollisionDetector {
+		detectCollision(colliderA, colliderB, manifold) {
+			throw new Error("Collision Detector: Inheritance Error");
+		}
+	}
+
+	class SphereSphereCollisionDetector extends CollisionDetector {
+
+		detectCollision(colliderA, colliderB, manifold) {
+
+		}
+	}
+
+	class SpherePlaneCollisionDetector extends CollisionDetector {
+
+	    constructor(flip=false) {
+	        super();
+	        this.flip = flip;
+	    }
+
+		detectCollision(colliderA, colliderB, manifold) {
+	        
+		}
+	}
+
+	class Manifold {
+	    constructor(bodyA, bodyB) {
+	        this.bodyA = bodyA;
+	        this.bodyB = bodyB;
+
+	        // Furthest point of A into B
+	        this.maxA = undefined;
+
+	        // Furthest point of B into A
+	        this.maxB = undefined;
+
+	        // B - A normalized
+	        this.normal = undefined;
+
+	        // Length of B - A
+	        this.depth = 0;
+
+	        this.hasCollision = false;
+	    }
 	}
 
 	class World {
@@ -463,6 +545,11 @@
 			if (params.gravity !== undefined) this.gravity.fromArray(params.gravity);
 
 			this.rigidbodies = [];
+
+			this.detector = [{}, {}, {}, {}, {}];
+			this.detector[SHAPE_SPHERE][SHAPE_SPHERE] = new SphereSphereCollisionDetector();
+			this.detector[SHAPE_SPHERE][SHAPE_PLANE] = new SpherePlaneCollisionDetector();
+			this.detector[SHAPE_PLANE][SHAPE_SPHERE] = new SpherePlaneCollisionDetector(true);
 		}
 
 		step() {
@@ -475,14 +562,14 @@
 			}
 
 			// resolve collisions
-			// recalculate the net force on body from other objects
+			this.resolveCollisions();
 
 			// update velocity & position
 			for (var i = 0; i < this.rigidbodies.length; i++) {
 				var body = this.rigidbodies[i];
 				if (body.move) {
-					body.velocity.addScaledVector(body.force, body.invMass * this.timestep);
-					body.position.addScaledVector(body.velocity, world.timestep);
+					body.linearVelocity.addScaledVector(body.force, body.invMass * this.timestep);
+					body.position.addScaledVector(body.linearVelocity, world.timestep);
 
 					// reset force
 					body.force.reset();
@@ -495,14 +582,16 @@
 		}
 
 		addRigidbody(bodyParams) {
-			let rb = new RigidBody(bodyParams);
-			if (rb.shape == undefined) {
-				console.error("Rigidbody of shape: ", bodyParams.shape, " cannot be created");
+			let collider = this._createCollider(bodyParams);
+			if (collider == undefined) {
+				console.error("Collider of shape: ", bodyParams.shape, " cannot be created");
 				return;
 			}
 
-			this.rigidbodies.push(rb);
+			let rb = new RigidBody(bodyParams);
+			rb.addCollider(collider);
 
+			this.rigidbodies.push(rb);
 			return rb;
 		}
 
@@ -513,34 +602,59 @@
 			return this.rigidbodies.length;
 		}
 
+		resolveCollisions() {
+			var numBodies = this.rigidbodies.length;
+
+			for (var i = 0; i < numBodies; i++) {
+				for (var j = i+1; j < numBodies; j++) {
+					var bodyA = this.rigidbodies[i];
+					var bodyB = this.rigidbodies[j];
+
+					var detector = this.detector[bodyA.collider.shape][bodyB.collider.shape];
+					var manifold = new Manifold(bodyA, bodyB);
+
+					detector.detectCollision(bodyA.collider, bodyB.collider, manifold);
+					if (manifold.hasCollision) {
+						console.log("Collision Detected: ", manifold);
+					} else {
+						console.log("No collision");
+					}
+				}
+			}
+
+			// solve collisions
+
+			// impulse solver
+			// position correction
+		}
+
+		_createCollider(config) {
+			switch (config.shape) {
+				case SHAPE_BOX:
+					return new BoxCollider(SHAPE_BOX, config);
+				case SHAPE_SPHERE:
+					return new SphereCollider(SHAPE_SPHERE, config);
+				case SHAPE_PLANE:
+					return new PlaneCollider(SHAPE_PLANE, config);
+			}
+		}
+
 	}
 
 	exports.AABB_PROX = AABB_PROX;
 	exports.BODY_DYNAMIC = BODY_DYNAMIC;
-	exports.BODY_GHOST = BODY_GHOST;
 	exports.BODY_KINEMATIC = BODY_KINEMATIC;
-	exports.BODY_NULL = BODY_NULL;
 	exports.BODY_STATIC = BODY_STATIC;
 	exports.BR_BOUNDING_VOLUME_TREE = BR_BOUNDING_VOLUME_TREE;
 	exports.BR_BRUTE_FORCE = BR_BRUTE_FORCE;
 	exports.BR_NULL = BR_NULL;
 	exports.BR_SWEEP_AND_PRUNE = BR_SWEEP_AND_PRUNE;
-	exports.Box = Box;
-	exports.JOINT_BALL_AND_SOCKET = JOINT_BALL_AND_SOCKET;
-	exports.JOINT_DISTANCE = JOINT_DISTANCE;
-	exports.JOINT_HINGE = JOINT_HINGE;
-	exports.JOINT_NULL = JOINT_NULL;
-	exports.JOINT_PRISMATIC = JOINT_PRISMATIC;
-	exports.JOINT_SLIDER = JOINT_SLIDER;
-	exports.JOINT_WHEEL = JOINT_WHEEL;
 	exports.RigidBody = RigidBody;
 	exports.SHAPE_BOX = SHAPE_BOX;
 	exports.SHAPE_CYLINDER = SHAPE_CYLINDER;
-	exports.SHAPE_NULL = SHAPE_NULL;
-	exports.SHAPE_PARTICLE = SHAPE_PARTICLE;
 	exports.SHAPE_PLANE = SHAPE_PLANE;
+	exports.SHAPE_POLYGON = SHAPE_POLYGON;
 	exports.SHAPE_SPHERE = SHAPE_SPHERE;
-	exports.SHAPE_TETRA = SHAPE_TETRA;
 	exports.Vec3 = Vec3;
 	exports.World = World;
 
