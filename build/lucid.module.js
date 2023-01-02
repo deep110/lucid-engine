@@ -84,46 +84,32 @@ class Vec3 {
 		return this;
 	}
 
-	add(a, b) {
-		if (b !== undefined) return this.addVectors(a, b);
+	add(a) {
+		let v = new Vec3();
 
-		this.x += a.x;
-		this.y += a.y;
-		this.z += a.z;
-		return this;
+		v.x = this.x + a.x;
+		v.y = this.y + a.y;
+		v.z = this.z + a.z;
+		return v;
 	}
 
-	addVectors(a, b) {
-		this.x = a.x + b.x;
-		this.y = a.y + b.y;
-		this.z = a.z + b.z;
-		return this;
-	}
-
-	addEqual(v) {
+	iadd(v) {
 		this.x += v.x;
 		this.y += v.y;
 		this.z += v.z;
 		return this;
 	}
 
-	sub(a, b) {
-		if (b !== undefined) return this.subVectors(a, b);
+	sub(a) {
+		let v = new Vec3();
 
-		this.x -= a.x;
-		this.y -= a.y;
-		this.z -= a.z;
-		return this;
+		v.x = this.x - a.x;
+		v.y = this.y - a.y;
+		v.z = this.z - a.z;
+		return v;
 	}
 
-	subVectors(a, b) {
-		this.x = a.x - b.x;
-		this.y = a.y - b.y;
-		this.z = a.z - b.z;
-		return this;
-	}
-
-	subEqual(v) {
+	isub(v) {
 		this.x -= v.x;
 		this.y -= v.y;
 		this.z -= v.z;
@@ -146,12 +132,11 @@ class Vec3 {
 		return this;
 	}
 
-	scaleEqual(s) {
+	iscale(s) {
 		this.x *= s;
 		this.y *= s;
 		this.z *= s;
 		return this;
-
 	}
 
 	multiply(v) {
@@ -177,25 +162,12 @@ class Vec3 {
 		return this;
 	}
 
-	cross(a, b) {
-		if (b !== undefined) return this.crossVectors(a, b);
-
+	cross(a) {
 		var x = this.x, y = this.y, z = this.z;
 
 		this.x = y * a.z - z * a.y;
 		this.y = z * a.x - x * a.z;
 		this.z = x * a.y - y * a.x;
-
-		return this;
-	}
-
-	crossVectors(a, b) {
-		var ax = a.x, ay = a.y, az = a.z;
-		var bx = b.x, by = b.y, bz = b.z;
-
-		this.x = ay * bz - az * by;
-		this.y = az * bx - ax * bz;
-		this.z = ax * by - ay * bx;
 
 		return this;
 	}
@@ -210,27 +182,8 @@ class Vec3 {
 		return this;
 	}
 
-	invert(v) {
-		this.x = -v.x;
-		this.y = -v.y;
-		this.z = -v.z;
-		return this;
-	}
-
-	negate() {
-		this.x = -this.x;
-		this.y = -this.y;
-		this.z = -this.z;
-
-		return this;
-	}
-
 	dot(v) {
 		return this.x * v.x + this.y * v.y + this.z * v.z;
-	}
-
-	addition() {
-		return this.x + this.y + this.z;
 	}
 
 	lengthSq() {
@@ -239,6 +192,11 @@ class Vec3 {
 
 	length() {
 		return MathUtil.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+	}
+
+	normalize() {
+		var invLength = 1 / this.length();
+		return this.iscale(invLength);
 	}
 
 	copy(v) {
@@ -292,7 +250,7 @@ class Vec3 {
 		return this;
 	}
 
-	testZero() {
+	isZero() {
 		if (this.x !== 0 || this.y !== 0 || this.z !== 0) return true;
 
 		return false;
@@ -308,28 +266,6 @@ class Vec3 {
 
 	toString() {
 		return "Vec3[" + this.x.toFixed(4) + ", " + this.y.toFixed(4) + ", " + this.z.toFixed(4) + "]";
-	}
-
-	multiplyScalar(scalar) {
-		if (isFinite(scalar)) {
-			this.x *= scalar;
-			this.y *= scalar;
-			this.z *= scalar;
-		} else {
-			this.x = 0;
-			this.y = 0;
-			this.z = 0;
-		}
-
-		return this;
-	}
-
-	divideScalar(scalar) {
-		return this.multiplyScalar(1 / scalar);
-	}
-
-	normalize() {
-		return this.divideScalar(this.length());
 	}
 
 	toArray(array, offset) {
@@ -391,8 +327,33 @@ class Quaternion {
 	}
 
 	clone() {
-		return new Quat(this.x, this.y, this.z, this.w);
+		return new Quaternion(this.x, this.y, this.z, this.w);
 	}
+
+	normalize() {
+        var l = this.length();
+        if (l === 0) {
+            this.set(0, 0, 0, 1);
+        } else {
+            l = 1 / l;
+            this.x = this.x * l;
+            this.y = this.y * l;
+            this.z = this.z * l;
+            this.w = this.w * l;
+        }
+        return this;
+    }
+
+	conjugate() {
+        this.x *= -1;
+        this.y *= -1;
+        this.z *= -1;
+        return this;
+    }
+
+	inverse() {
+        return this.conjugate().normalize();
+    }
 
 	fromEuler(v) {
 		this.x = MathUtil.cos(v.z/2) * MathUtil.cos(v.y/2) * MathUtil.sin(v.x/2) - MathUtil.sin(v.z/2) * MathUtil.sin(v.y/2) * MathUtil.cos(v.x/2);
@@ -411,20 +372,22 @@ class RigidBody {
 		this.position = new Vec3();
 		this.orientation = new Quaternion();
 		this.rotation = new Vec3();
+		this.scale = new Vec3(1, 1, 1);
 
 		if (params.position !== undefined) this.position.fromArray(params.position);
 		if (params.rotation !== undefined) {
 			this.rotation.fromArray(params.rotation);
 			this.orientation.fromEuler(this.rotation);
 		}
+		if (params.scale !== undefined) this.scale.fromArray(params.scale);
 
 		this.force = new Vec3();
 		this.linearVelocity = new Vec3();
 		this.angularVelocity = new Vec3();
 
+		this.type = params.type || BODY_DYNAMIC;
 		this.mass = 1;
 		this.invMass = 1 / this.mass;
-		this.move = params.move;
 
 		this.collider = undefined;
 	}
@@ -441,12 +404,20 @@ class RigidBody {
 		this.collider = collider;
 	}
 
+	move(dt) {
+		this.linearVelocity.addScaledVector(this.force, this.invMass * dt);
+		this.position.addScaledVector(this.linearVelocity, dt);
+
+		// update collider
+		this.collider.update(this);
+	}
+
 }
 
 class Collider {
 
-	constructor(shape, config) {
-		this.shape = shape;
+	constructor(shapeType, config, rigidbody) {
+		this.shape = shapeType;
 
 		this.density = config.density || 1;
 		this.friction = config.friction || 0.2;
@@ -454,27 +425,56 @@ class Collider {
 
 	}
 
+	update(rigidbody) {
+		throw new Error("Collider: Update Inheritance Error");
+	}
 }
 
 class BoxCollider extends Collider {
 
-	constructor(shape, config) {
-		super(shape, config);
+	constructor(shapeType, config, rigidbody) {
+		super(shapeType, config, rigidbody);
 	}
 
 }
 
 class SphereCollider extends Collider {
-    constructor(shape, config) {
-        super(shape, config);
+    constructor(shapeType, config, rigidbody) {
+        super(shapeType, config, rigidbody);
 
-        // this.radius = config.scale;
+        // set radius
+        this.radius = rigidbody.scale.x;
+        // set center
+        this.center = rigidbody.position.clone();
+    }
+
+    update(rigidbody) {
+        this.center.copy(rigidbody.position);
     }
 }
 
 class PlaneCollider extends Collider {
-    constructor(shape, config) {
-        super(shape, config);
+    constructor(shapeType, config, rigidbody) {
+        super(shapeType, config, rigidbody);
+
+        // representing plane in vector form:
+        // 
+        // Vec(n) . [ Vec(r) - Vec(ro) ] = 0
+        // where,
+        //     ro is any point on the plane
+        //     n is normal vector perpendicular to plane
+        this.normal = new Vec3();
+        this.point = rigidbody.position.clone();
+
+        // for now set the normal
+        this.normal.set(0, 1, 0);
+
+        // cache the Vec(n) . Vec(ro)
+        this.d = this.normal.dot(this.point);
+    }
+
+    update(rigidbody) {
+        // planes don't move or rotate
     }
 }
 
@@ -499,7 +499,24 @@ class SpherePlaneCollisionDetector extends CollisionDetector {
     }
 
 	detectCollision(colliderA, colliderB, manifold) {
-        
+        var sphere = this.flip ? colliderB : colliderA;
+        var plane = this.flip ? colliderA : colliderB;
+
+        // find the signed distance of sphere's center from plane
+        var distance = sphere.center.dot(plane.normal) - plane.d;
+
+        if (MathUtil.abs(distance) < sphere.radius) {
+            manifold.hasCollision = true;
+
+            var B = sphere.center.clone().subScaledVector(plane.normal, distance);
+            var A = sphere.center.clone().subScaledVector(plane.normal, sphere.radius);
+
+            if (this.flip) {
+                manifold.update(B, A);
+            } else {
+                manifold.update(A, B);
+            }
+        }
 	}
 }
 
@@ -509,18 +526,28 @@ class Manifold {
         this.bodyB = bodyB;
 
         // Furthest point of A into B
-        this.maxA = undefined;
+        this.A = undefined;
 
         // Furthest point of B into A
-        this.maxB = undefined;
+        this.B = undefined;
 
         // B - A normalized
-        this.normal = undefined;
+        this.collisionNormal = undefined;
 
         // Length of B - A
-        this.depth = 0;
+        this.penetrationDepth = 0;
 
         this.hasCollision = false;
+    }
+
+    update(A, B) {
+        this.A = A;
+        this.B = B;
+
+        var normal = B.sub(A);
+
+        this.penetrationDepth = normal.length();
+        this.collisionNormal = normal.normalize();
     }
 }
 
@@ -550,7 +577,7 @@ class World {
 		// apply gravity force
 		for (var i = 0; i < this.rigidbodies.length; i++) {
 			var body = this.rigidbodies[i];
-			if (body.move) {
+			if (body.type == BODY_DYNAMIC && body.invMass > 0) {
 				body.force.addScaledVector(this.gravity, body.mass);
 			}
 		}
@@ -561,10 +588,8 @@ class World {
 		// update velocity & position
 		for (var i = 0; i < this.rigidbodies.length; i++) {
 			var body = this.rigidbodies[i];
-			if (body.move) {
-				body.linearVelocity.addScaledVector(body.force, body.invMass * this.timestep);
-				body.position.addScaledVector(body.linearVelocity, world.timestep);
-
+			if (body.type == BODY_DYNAMIC && body.invMass > 0) {
+				body.move(this.timestep);
 				// reset force
 				body.force.reset();
 			}
@@ -576,13 +601,13 @@ class World {
 	}
 
 	addRigidbody(bodyParams) {
-		let collider = this._createCollider(bodyParams);
+		let rb = new RigidBody(bodyParams);
+
+		let collider = this._createCollider(bodyParams, rb);
 		if (collider == undefined) {
 			console.error("Collider of shape: ", bodyParams.shape, " cannot be created");
 			return;
 		}
-
-		let rb = new RigidBody(bodyParams);
 		rb.addCollider(collider);
 
 		this.rigidbodies.push(rb);
@@ -610,8 +635,6 @@ class World {
 				detector.detectCollision(bodyA.collider, bodyB.collider, manifold);
 				if (manifold.hasCollision) {
 					console.log("Collision Detected: ", manifold);
-				} else {
-					console.log("No collision");
 				}
 			}
 		}
@@ -622,14 +645,14 @@ class World {
 		// position correction
 	}
 
-	_createCollider(config) {
+	_createCollider(config, body) {
 		switch (config.shape) {
 			case SHAPE_BOX:
-				return new BoxCollider(SHAPE_BOX, config);
+				return new BoxCollider(SHAPE_BOX, config, body);
 			case SHAPE_SPHERE:
-				return new SphereCollider(SHAPE_SPHERE, config);
+				return new SphereCollider(SHAPE_SPHERE, config, body);
 			case SHAPE_PLANE:
-				return new PlaneCollider(SHAPE_PLANE, config);
+				return new PlaneCollider(SHAPE_PLANE, config, body);
 		}
 	}
 

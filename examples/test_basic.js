@@ -58,18 +58,17 @@ function initializeScene() {
 	const sphereGeometry = new THREE.SphereGeometry(1, 12, 8);
 	const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
 
-	const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+	const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff00ff });
 	const boxMaterial = new THREE.MeshStandardMaterial({ color: 0xff00ff });
 
 	addGround();
 
-	// add a box
+	// add a sphere
 	var body = world.addRigidbody({
 		type: LUCID.BODY_DYNAMIC,
 		shape: LUCID.SHAPE_SPHERE,
 		position: [0, 20, 0], // start position
 		scale: [1, 1, 1], // size of shape
-		move: true, // dynamic or static
 	});
 	var mesh = new SceneObject(sphereGeometry, sphereMaterial, body);
 	

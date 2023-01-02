@@ -1,6 +1,6 @@
 import { RigidBody } from "./rigidbody";
 import { Vec3 } from "../math/vec3";
-import { SHAPE_BOX, SHAPE_SPHERE, SHAPE_PLANE } from "../constants";
+import { SHAPE_BOX, SHAPE_SPHERE, SHAPE_PLANE, BODY_DYNAMIC } from "../constants";
 
 import { BoxCollider } from "../collider/box_collider";
 import { SphereCollider } from "../collider/sphere_collider";
@@ -36,7 +36,7 @@ class World {
 		// apply gravity force
 		for (var i = 0; i < this.rigidbodies.length; i++) {
 			var body = this.rigidbodies[i];
-			if (body.move) {
+			if (body.type == BODY_DYNAMIC && body.invMass > 0) {
 				body.force.addScaledVector(this.gravity, body.mass);
 			}
 		}
@@ -47,10 +47,8 @@ class World {
 		// update velocity & position
 		for (var i = 0; i < this.rigidbodies.length; i++) {
 			var body = this.rigidbodies[i];
-			if (body.move) {
-				body.linearVelocity.addScaledVector(body.force, body.invMass * this.timestep);
-				body.position.addScaledVector(body.linearVelocity, world.timestep);
-
+			if (body.type == BODY_DYNAMIC && body.invMass > 0) {
+				body.move(this.timestep);
 				// reset force
 				body.force.reset();
 			}
@@ -62,13 +60,13 @@ class World {
 	}
 
 	addRigidbody(bodyParams) {
-		let collider = this._createCollider(bodyParams);
+		let rb = new RigidBody(bodyParams);
+
+		let collider = this._createCollider(bodyParams, rb);
 		if (collider == undefined) {
 			console.error("Collider of shape: ", bodyParams.shape, " cannot be created");
 			return;
 		}
-
-		let rb = new RigidBody(bodyParams);
 		rb.addCollider(collider);
 
 		this.rigidbodies.push(rb);
@@ -98,8 +96,6 @@ class World {
 				if (manifold.hasCollision) {
 					console.log("Collision Detected: ", manifold);
 					collisions.push(manifold);
-				} else {
-					console.log("No collision");
 				}
 			}
 		}
@@ -110,14 +106,14 @@ class World {
 		// position correction
 	}
 
-	_createCollider(config) {
+	_createCollider(config, body) {
 		switch (config.shape) {
 			case SHAPE_BOX:
-				return new BoxCollider(SHAPE_BOX, config);
+				return new BoxCollider(SHAPE_BOX, config, body);
 			case SHAPE_SPHERE:
-				return new SphereCollider(SHAPE_SPHERE, config);
+				return new SphereCollider(SHAPE_SPHERE, config, body);
 			case SHAPE_PLANE:
-				return new PlaneCollider(SHAPE_PLANE, config);
+				return new PlaneCollider(SHAPE_PLANE, config, body);
 		}
 	}
 

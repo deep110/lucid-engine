@@ -34,8 +34,33 @@ class Quaternion {
 	}
 
 	clone() {
-		return new Quat(this.x, this.y, this.z, this.w);
+		return new Quaternion(this.x, this.y, this.z, this.w);
 	}
+
+	normalize() {
+        var l = this.length();
+        if (l === 0) {
+            this.set(0, 0, 0, 1);
+        } else {
+            l = 1 / l;
+            this.x = this.x * l;
+            this.y = this.y * l;
+            this.z = this.z * l;
+            this.w = this.w * l;
+        }
+        return this;
+    }
+
+	conjugate() {
+        this.x *= -1;
+        this.y *= -1;
+        this.z *= -1;
+        return this;
+    }
+
+	inverse() {
+        return this.conjugate().normalize();
+    }
 
 	fromEuler(v) {
 		this.x = MathUtil.cos(v.z/2) * MathUtil.cos(v.y/2) * MathUtil.sin(v.x/2) - MathUtil.sin(v.z/2) * MathUtil.sin(v.y/2) * MathUtil.cos(v.x/2);

@@ -14,46 +14,32 @@ class Vec3 {
 		return this;
 	}
 
-	add(a, b) {
-		if (b !== undefined) return this.addVectors(a, b);
+	add(a) {
+		let v = new Vec3();
 
-		this.x += a.x;
-		this.y += a.y;
-		this.z += a.z;
-		return this;
+		v.x = this.x + a.x;
+		v.y = this.y + a.y;
+		v.z = this.z + a.z;
+		return v;
 	}
 
-	addVectors(a, b) {
-		this.x = a.x + b.x;
-		this.y = a.y + b.y;
-		this.z = a.z + b.z;
-		return this;
-	}
-
-	addEqual(v) {
+	iadd(v) {
 		this.x += v.x;
 		this.y += v.y;
 		this.z += v.z;
 		return this;
 	}
 
-	sub(a, b) {
-		if (b !== undefined) return this.subVectors(a, b);
+	sub(a) {
+		let v = new Vec3();
 
-		this.x -= a.x;
-		this.y -= a.y;
-		this.z -= a.z;
-		return this;
+		v.x = this.x - a.x;
+		v.y = this.y - a.y;
+		v.z = this.z - a.z;
+		return v;
 	}
 
-	subVectors(a, b) {
-		this.x = a.x - b.x;
-		this.y = a.y - b.y;
-		this.z = a.z - b.z;
-		return this;
-	}
-
-	subEqual(v) {
+	isub(v) {
 		this.x -= v.x;
 		this.y -= v.y;
 		this.z -= v.z;
@@ -76,12 +62,11 @@ class Vec3 {
 		return this;
 	}
 
-	scaleEqual(s) {
+	iscale(s) {
 		this.x *= s;
 		this.y *= s;
 		this.z *= s;
 		return this;
-
 	}
 
 	multiply(v) {
@@ -107,25 +92,12 @@ class Vec3 {
 		return this;
 	}
 
-	cross(a, b) {
-		if (b !== undefined) return this.crossVectors(a, b);
-
+	cross(a) {
 		var x = this.x, y = this.y, z = this.z;
 
 		this.x = y * a.z - z * a.y;
 		this.y = z * a.x - x * a.z;
 		this.z = x * a.y - y * a.x;
-
-		return this;
-	}
-
-	crossVectors(a, b) {
-		var ax = a.x, ay = a.y, az = a.z;
-		var bx = b.x, by = b.y, bz = b.z;
-
-		this.x = ay * bz - az * by;
-		this.y = az * bx - ax * bz;
-		this.z = ax * by - ay * bx;
 
 		return this;
 	}
@@ -140,27 +112,8 @@ class Vec3 {
 		return this;
 	}
 
-	invert(v) {
-		this.x = -v.x;
-		this.y = -v.y;
-		this.z = -v.z;
-		return this;
-	}
-
-	negate() {
-		this.x = -this.x;
-		this.y = -this.y;
-		this.z = -this.z;
-
-		return this;
-	}
-
 	dot(v) {
 		return this.x * v.x + this.y * v.y + this.z * v.z;
-	}
-
-	addition() {
-		return this.x + this.y + this.z;
 	}
 
 	lengthSq() {
@@ -169,6 +122,11 @@ class Vec3 {
 
 	length() {
 		return MathUtil.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+	}
+
+	normalize() {
+		var invLength = 1 / this.length();
+		return this.iscale(invLength);
 	}
 
 	copy(v) {
@@ -222,7 +180,7 @@ class Vec3 {
 		return this;
 	}
 
-	testZero() {
+	isZero() {
 		if (this.x !== 0 || this.y !== 0 || this.z !== 0) return true;
 
 		return false;
@@ -238,28 +196,6 @@ class Vec3 {
 
 	toString() {
 		return "Vec3[" + this.x.toFixed(4) + ", " + this.y.toFixed(4) + ", " + this.z.toFixed(4) + "]";
-	}
-
-	multiplyScalar(scalar) {
-		if (isFinite(scalar)) {
-			this.x *= scalar;
-			this.y *= scalar;
-			this.z *= scalar;
-		} else {
-			this.x = 0;
-			this.y = 0;
-			this.z = 0;
-		}
-
-		return this;
-	}
-
-	divideScalar(scalar) {
-		return this.multiplyScalar(1 / scalar);
-	}
-
-	normalize() {
-		return this.divideScalar(this.length());
 	}
 
 	toArray(array, offset) {

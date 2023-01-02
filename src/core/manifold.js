@@ -6,17 +6,27 @@ export class Manifold {
         this.bodyB = bodyB;
 
         // Furthest point of A into B
-        this.maxA = undefined;
+        this.A = undefined;
 
         // Furthest point of B into A
-        this.maxB = undefined;
+        this.B = undefined;
 
         // B - A normalized
-        this.normal = undefined;
+        this.collisionNormal = undefined;
 
         // Length of B - A
-        this.depth = 0;
+        this.penetrationDepth = 0;
 
         this.hasCollision = false;
+    }
+
+    update(A, B) {
+        this.A = A;
+        this.B = B;
+
+        var normal = B.sub(A);
+
+        this.penetrationDepth = normal.length();
+        this.collisionNormal = normal.normalize();
     }
 }

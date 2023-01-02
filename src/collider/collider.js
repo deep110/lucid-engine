@@ -1,7 +1,7 @@
 class Collider {
 
-	constructor(shape, config) {
-		this.shape = shape;
+	constructor(shapeType, config, rigidbody) {
+		this.shape = shapeType;
 
 		this.density = config.density || 1;
 		this.friction = config.friction || 0.2;
@@ -9,6 +9,9 @@ class Collider {
 
 	}
 
+	update(rigidbody) {
+		throw new Error("Collider: Update Inheritance Error");
+	}
 }
 
 export { Collider };
