@@ -29,7 +29,7 @@ var objects = [];
 initializeScene();
 var k = setInterval(update, (1/FPS) * 1000);
 
-var numUpdates = 80;
+var numUpdates = 200;
 
 // update
 function update() {
@@ -67,7 +67,7 @@ function initializeScene() {
 	var body = world.addRigidbody({
 		type: LUCID.BODY_DYNAMIC,
 		shape: LUCID.SHAPE_SPHERE,
-		position: [0, 20, 0], // start position
+		position: [0, 10, 0], // start position
 		scale: [1, 1, 1], // size of shape
 	});
 	var mesh = new SceneObject(sphereGeometry, sphereMaterial, body);

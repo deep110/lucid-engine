@@ -1,7 +1,7 @@
 import { MathUtil } from "../math/math";
 import { Vec3 } from "../math/vec3";
 import { Quaternion } from "../math/quat";
-import { BODY_DYNAMIC } from "../constants";
+import { BODY_DYNAMIC, BODY_STATIC } from "../constants";
 
 
 class RigidBody {
@@ -23,12 +23,21 @@ class RigidBody {
 		if (params.scale !== undefined) this.scale.fromArray(params.scale);
 
 		this.force = new Vec3();
+		this.torque = new Vec3();
 		this.linearVelocity = new Vec3();
 		this.angularVelocity = new Vec3();
 
 		this.type = params.type || BODY_DYNAMIC;
 		this.mass = 1;
 		this.invMass = 1 / this.mass;
+
+		if (this.type == BODY_STATIC) {
+			this.mass = MathUtil.INF;
+			this.invMass = 0;
+		}
+
+		this.restitution = params.restitution || 0.8;
+		this.friction = params.friction || 0.2;
 
 		this.collider = undefined;
 	}
@@ -43,6 +52,10 @@ class RigidBody {
 
 	addCollider(collider) {
 		this.collider = collider;
+	}
+
+	canMove() {
+		return this.type == BODY_DYNAMIC && this.invMass > 0;
 	}
 
 	move(dt) {

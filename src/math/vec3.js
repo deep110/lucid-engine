@@ -55,11 +55,13 @@ class Vec3 {
 	 * 
 	 * @returns Scaled Vector
 	 */
-	scale(v, s) {
-		this.x = v.x * s;
-		this.y = v.y * s;
-		this.z = v.z * s;
-		return this;
+	scale(s) {
+		let v = new Vec3();
+
+		v.x = this.x * s;
+		v.y = this.y * s;
+		v.z = this.z * s;
+		return v;
 	}
 
 	iscale(s) {

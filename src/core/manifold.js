@@ -24,7 +24,7 @@ export class Manifold {
         this.A = A;
         this.B = B;
 
-        var normal = B.sub(A);
+        var normal = A.sub(B);
 
         this.penetrationDepth = normal.length();
         this.collisionNormal = normal.normalize();

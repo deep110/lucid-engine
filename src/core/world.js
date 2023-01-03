@@ -36,23 +36,30 @@ class World {
 		// apply gravity force
 		for (var i = 0; i < this.rigidbodies.length; i++) {
 			var body = this.rigidbodies[i];
-			if (body.type == BODY_DYNAMIC && body.invMass > 0) {
+			if (body.canMove()) {
 				body.force.addScaledVector(this.gravity, body.mass);
 			}
 		}
 
-		// resolve collisions
-		this.resolveCollisions();
+		// find collisions using narrow phase
+		var collisions = this.__runNarrowPhaseCollisionDetector();
+
+		// solve collisions
+		this.__runImpulseSolver(collisions);
+
 
 		// update velocity & position
 		for (var i = 0; i < this.rigidbodies.length; i++) {
 			var body = this.rigidbodies[i];
-			if (body.type == BODY_DYNAMIC && body.invMass > 0) {
+			if (body.canMove()) {
 				body.move(this.timestep);
 				// reset force
 				body.force.reset();
+				body.torque.reset();
 			}
 		}
+
+		// console.log(this.rigidbodies[1])
 	}
 
 	setGravity(grArr) {
@@ -62,7 +69,7 @@ class World {
 	addRigidbody(bodyParams) {
 		let rb = new RigidBody(bodyParams);
 
-		let collider = this._createCollider(bodyParams, rb);
+		let collider = this.__createCollider(bodyParams, rb);
 		if (collider == undefined) {
 			console.error("Collider of shape: ", bodyParams.shape, " cannot be created");
 			return;
@@ -80,7 +87,7 @@ class World {
 		return this.rigidbodies.length;
 	}
 
-	resolveCollisions() {
+	__runNarrowPhaseCollisionDetector() {
 		var numBodies = this.rigidbodies.length;
 		var collisions = [];
 
@@ -94,19 +101,43 @@ class World {
 
 				detector.detectCollision(bodyA.collider, bodyB.collider, manifold);
 				if (manifold.hasCollision) {
-					console.log("Collision Detected: ", manifold);
 					collisions.push(manifold);
 				}
 			}
 		}
-
-		// solve collisions
-
-		// impulse solver
-		// position correction
+		return collisions;
 	}
 
-	_createCollider(config, body) {
+	__runImpulseSolver(collisions) {
+		for (var i = 0; i < collisions.length; i++) {
+			let manifold = collisions[i];
+
+			let bodyA = manifold.bodyA;
+			let bodyB = manifold.bodyB;
+
+			let relVelocity = bodyB.linearVelocity.sub(bodyA.linearVelocity);
+			// Relative velocity along the normal
+			let contactSpeed = relVelocity.dot(manifold.collisionNormal);
+
+			// only proceed forward if bodies are separating
+			if (contactSpeed > 0) {
+				continue;
+			}
+			
+			var e = bodyA.restitution * bodyB.restitution;
+			var impulseMag = -(1 + e) * contactSpeed / (bodyA.invMass + bodyB.invMass);
+			var impulse = manifold.collisionNormal.scale(impulseMag);
+
+			if (bodyA.canMove()) {
+				bodyA.linearVelocity.subScaledVector(impulse, bodyA.invMass);
+			}
+			if (bodyB.canMove()) {
+				bodyB.linearVelocity.addScaledVector(impulse, bodyB.invMass);
+			}
+		}
+	}
+
+	__createCollider(config, body) {
 		switch (config.shape) {
 			case SHAPE_BOX:
 				return new BoxCollider(SHAPE_BOX, config, body);
