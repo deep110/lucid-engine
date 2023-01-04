@@ -1,15 +1,20 @@
-import { MathUtil } from "./math";
+import { MathUtil } from "./utils";
+import { Vec3 } from "./vec3";
 
 class Quaternion {
+	x: number;
+	y: number;
+	z: number;
+	w: number;
 
-	constructor(x, y, z, w) {
+	constructor(x?: number, y?: number, z?: number, w?: number) {
 		this.x = x || 0;
 		this.y = y || 0;
 		this.z = z || 0;
 		this.w = w || 1;
 	}
 
-	set(x, y, z, w) {
+	set(x: number, y: number, z: number, w: number) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -25,7 +30,7 @@ class Quaternion {
 		return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
 	}
 
-	copy(q) {        
+	copy(q: Quaternion) {        
 		this.x = q.x;
 		this.y = q.y;
 		this.z = q.z;
@@ -38,7 +43,7 @@ class Quaternion {
 	}
 
 	normalize() {
-        var l = this.length();
+        let l = this.length();
         if (l === 0) {
             this.set(0, 0, 0, 1);
         } else {
@@ -62,7 +67,7 @@ class Quaternion {
         return this.conjugate().normalize();
     }
 
-	fromEuler(v) {
+	fromEuler(v: Vec3) {
 		this.x = MathUtil.cos(v.z/2) * MathUtil.cos(v.y/2) * MathUtil.sin(v.x/2) - MathUtil.sin(v.z/2) * MathUtil.sin(v.y/2) * MathUtil.cos(v.x/2);
 		this.y = MathUtil.cos(v.z/2) * MathUtil.sin(v.y/2) * MathUtil.cos(v.x/2) + MathUtil.sin(v.z/2) * MathUtil.cos(v.y/2) * MathUtil.sin(v.x/2);
 		this.z = MathUtil.sin(v.z/2) * MathUtil.cos(v.y/2) * MathUtil.cos(v.x/2) - MathUtil.cos(v.z/2) * MathUtil.sin(v.y/2) * MathUtil.sin(v.x/2);

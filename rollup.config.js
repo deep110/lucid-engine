@@ -1,6 +1,7 @@
+import typescript from '@rollup/plugin-typescript';
+
 export default {
-	input: 'src/lucid.js',
-	indent: '\t',
+	input: 'src/lucid.ts',
 	output: [
 		{
 			format: 'umd',
@@ -11,5 +12,6 @@ export default {
 			format: 'es',
 			file: 'build/lucid.module.js'
 		}
-	]
+	],
+	plugins: [typescript()]
 };

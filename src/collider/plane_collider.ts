@@ -1,9 +1,14 @@
-import { Vec3 } from "../math/vec3";
+import { Vec3 } from "../math/index";
 import { Collider } from "./collider";
+import { RigidBody } from "../core/rigidbody";
 
 export class PlaneCollider extends Collider {
-    constructor(shapeType, config, rigidbody) {
-        super(shapeType, config, rigidbody);
+    normal: Vec3;
+    point: Vec3;
+    d: number;
+
+    constructor(shapeType: number, rigidbody: RigidBody) {
+        super(shapeType, rigidbody);
 
         // representing plane in vector form:
         // 
@@ -21,7 +26,7 @@ export class PlaneCollider extends Collider {
         this.d = this.normal.dot(this.point);
     }
 
-    update(rigidbody) {
+    update(rigidbody: RigidBody) {
         // planes don't move or rotate
     }
 }

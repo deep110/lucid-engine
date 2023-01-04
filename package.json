@@ -16,35 +16,11 @@
         "src",
         "examples/js"
     ],
-    "eslintConfig": {
-        "extends": "mdcs",
-        "parserOptions": {
-            "ecmaVersion": 13
-        },
-        "rules": {
-            "space-in-parens": "off",
-            "padded-blocks": "off",
-            "space-unary-ops": [
-                "error",
-                {
-                    "words": true,
-                    "nonwords": false
-                }
-            ],
-            "computed-property-spacing": [
-                "error",
-                "never",
-                {
-                    "enforceForClassMembers": true
-                }
-            ]
-        }
-    },
     "scripts": {
-        "build": "rollup -c",
-        "build-uglify": "rollup -c && terser build/lucid.js -c -m -b beautify=false,preamble=\"'// @author Deepankar Agrawal'\" > build/lucid.min.js",
-        "dev": "rollup -c -w",
-        "lint": "eslint src",
+        "build": "rm -rf build/ && rollup -c --bundleConfigAsCjs",
+        "build-uglify": "rollup -c --bundleConfigAsCjs && terser build/lucid.js -c -m -b beautify=false,preamble=\"'// @author Deepankar Agrawal'\" > build/lucid.min.js",
+        "dev": "rollup -c -w --bundleConfigAsCjs",
+        "lint": "eslint src --ext .ts",
         "test": "echo \"Error: No test specified!\" && exit 1"
     },
     "keywords": [
@@ -59,10 +35,13 @@
         "url": "https://github.com/lucid-engine/issues/"
     },
     "devDependencies": {
+        "@rollup/plugin-typescript": "^10.0.1",
+        "@typescript-eslint/eslint-plugin": "^5.48.0",
+        "@typescript-eslint/parser": "^5.48.0",
         "eslint": "latest",
-        "eslint-config-mdcs": "latest",
         "rollup": "latest",
-        "rollup-watch": "latest",
-        "terser": "latest"
+        "terser": "latest",
+        "tslib": "^2.4.1",
+        "typescript": "latest"
     }
 }

@@ -1,4 +1,4 @@
-var MathUtil = {
+export const MathUtil = {
 	abs: Math.abs,
 	sqrt: Math.sqrt,
 	floor: Math.floor,
@@ -13,7 +13,7 @@ var MathUtil = {
 	min: Math.min,
 	random: Math.random,
 
-	degtorad: 0.0174532925199432957,
+	degtorad: 0.017453292519943,
 	radtodeg: 57.295779513082320876,
 	PI: 3.141592653589793,
 	TwoPI: 6.283185307179586,
@@ -26,12 +26,12 @@ var MathUtil = {
 
 	generateUUID: function () {
 		// http://www.broofa.com/Tools/Math.uuid.htm
-		var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
-		var uuid = new Array(36);
-		var rnd = 0, r;
+		const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
+		const uuid = new Array(36);
+		let rnd = 0, r;
 
 		return function generateUUID() {
-			for (var i = 0; i < 36; i++) {
+			for (let i = 0; i < 36; i++) {
 				if (i === 8 || i === 13 || i === 18 || i === 23) {
 					uuid[i] = '-';
 				} else if (i === 14) {
@@ -48,5 +48,3 @@ var MathUtil = {
 		};
 	}(),
 };
-
-export { MathUtil };
