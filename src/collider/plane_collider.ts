@@ -3,12 +3,16 @@ import { Collider } from "./collider";
 import { RigidBody } from "../core/rigidbody";
 
 export class PlaneCollider extends Collider {
+    dims: Vec3;
     normal: Vec3;
     point: Vec3;
     d: number;
 
     constructor(shapeType: number, rigidbody: RigidBody) {
         super(shapeType, rigidbody);
+
+        // TODO: account for rotation
+        this.dims = rigidbody.scale.clone();
 
         // representing plane in vector form:
         // 

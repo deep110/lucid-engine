@@ -15,6 +15,8 @@ export class SpherePlaneCollisionDetector implements CollisionDetector {
         const sphere = this.flip ? <SphereCollider>colliderB : <SphereCollider>colliderA;
         const plane = this.flip ? <PlaneCollider>colliderA : <PlaneCollider>colliderB;
 
+        // TODO: add check for plane dimensions for finite planes
+
         // find the signed distance of sphere's center from plane
         const distance = sphere.center.dot(plane.normal) - plane.d;
 

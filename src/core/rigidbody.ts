@@ -71,8 +71,8 @@ export class RigidBody {
 
 		this.density = params.density || 1;
 		this.restitution = params.restitution || 0.8;
-		this.staticFriction = params.staticFriction || 0.5;
-		this.dynamicFriction = params.dynamicFriction || 0.2;
+		this.staticFriction = params.staticFriction || 0.3;
+		this.dynamicFriction = params.dynamicFriction || 0.1;
 	}
 
 	getPosition() {
@@ -92,10 +92,21 @@ export class RigidBody {
 	}
 
 	move(dt: number) {
+		if (!this.canMove()) {
+			return;
+		}
+
 		this.linearVelocity.addScaledVector(this.force, this.invMass * dt);
 		this.position.addScaledVector(this.linearVelocity, dt);
+		// TODO: account for rotation
 
 		// update collider
 		if (this.collider) this.collider.update(this);
+	}
+
+	applyImpulse(impulse: Vec3) {
+		if (this.canMove()) {
+			this.linearVelocity.addScaledVector(impulse, this.invMass);
+		}
 	}
 }

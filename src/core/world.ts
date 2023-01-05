@@ -1,5 +1,5 @@
 import { SHAPE_BOX, SHAPE_SPHERE, SHAPE_PLANE } from "../constants";
-import { Vec3 } from "../math/index";
+import { MathUtil, Vec3 } from "../math/index";
 
 import { RigidBody, RigidbodyParams } from "./rigidbody";
 import { Manifold } from "./manifold";
@@ -8,7 +8,7 @@ import { BoxCollider, SphereCollider, PlaneCollider } from "../collider/index";
 import { SpherePlaneCollisionDetector, SphereSphereCollisionDetector } from "../collision/narrowphase/index";
 
 
-class World {
+export class World {
 	timestep: number;
 	iterations: number;
 	scale: number;
@@ -54,17 +54,14 @@ class World {
 		// solve collisions
 		this.runImpulseSolver(collisions);
 
-
 		// update velocity & position
 		for (let i = 0; i < this.rigidbodies.length; i++) {
 			const body = this.rigidbodies[i];
-			if (body.canMove()) {
-				body.move(this.timestep);
+			body.move(this.timestep);
 
-				// reset force
-				body.force.reset();
-				body.torque.reset();
-			}
+			// reset force
+			body.force.reset();
+			body.torque.reset();
 		}
 	}
 
@@ -125,23 +122,50 @@ class World {
 
 			const relVelocity = bodyB.linearVelocity.sub(bodyA.linearVelocity);
 			// Relative velocity along the normal
-			const contactSpeed = relVelocity.dot(manifold.collisionNormal);
+			let contactSpeed = relVelocity.dot(manifold.collisionNormal);
 
 			// only proceed forward if bodies are separating
 			if (contactSpeed > 0) {
 				continue;
 			}
 
+			// Normal Impulse
+
 			const e = bodyA.restitution * bodyB.restitution;
-			const impulseMag = -(1 + e) * contactSpeed / (bodyA.invMass + bodyB.invMass);
+			const totalInvMass = bodyA.invMass + bodyB.invMass;
+
+			const impulseMag = -(1 + e) * contactSpeed / totalInvMass;
 			const impulse = manifold.collisionNormal.scale(impulseMag);
 
-			if (bodyA.canMove()) {
-				bodyA.linearVelocity.subScaledVector(impulse, bodyA.invMass);
+			bodyB.applyImpulse(impulse);
+			bodyA.applyImpulse(impulse.negate());
+
+			// Frictional Impulse
+			relVelocity.copy(bodyB.linearVelocity).isub(bodyA.linearVelocity);
+			contactSpeed = relVelocity.dot(manifold.collisionNormal);
+
+			// get direction of relative velocity perpendicular to collision normal
+			const tangent = relVelocity.clone().subScaledVector(manifold.collisionNormal, contactSpeed);
+			tangent.safeNormalize();
+
+			let mu = MathUtil.sqrt(
+				bodyA.staticFriction * bodyA.staticFriction + bodyB.staticFriction * bodyB.staticFriction
+			);
+			const frictionImpulseMag = -relVelocity.dot(tangent) / totalInvMass;
+			
+			// use static friction if friction force less than Normal force
+			if (MathUtil.abs(frictionImpulseMag) < impulseMag * mu) {
+				impulse.copy(tangent).iscale(frictionImpulseMag);
+			} else {
+				mu = MathUtil.sqrt(
+					bodyA.dynamicFriction * bodyA.dynamicFriction + bodyB.dynamicFriction * bodyB.dynamicFriction
+				);
+				impulse.copy(tangent).iscale(-impulseMag * mu);
 			}
-			if (bodyB.canMove()) {
-				bodyB.linearVelocity.addScaledVector(impulse, bodyB.invMass);
-			}
+
+			bodyB.applyImpulse(impulse);
+			bodyA.applyImpulse(impulse.negate());
+
 		}
 	}
 
@@ -157,5 +181,3 @@ class World {
 	}
 
 }
-
-export { World };

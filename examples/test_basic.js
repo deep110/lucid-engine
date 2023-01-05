@@ -29,7 +29,7 @@ var objects = [];
 initializeScene();
 var k = setInterval(update, (1/FPS) * 1000);
 
-var numUpdates = 200;
+var numUpdates = 300;
 
 // update
 function update() {
@@ -63,17 +63,20 @@ function initializeScene() {
 
 	addGround();
 
-	// add a sphere
-	var body = world.addRigidbody({
-		type: LUCID.BODY_DYNAMIC,
-		shape: LUCID.SHAPE_SPHERE,
-		position: [0, 10, 0], // start position
-		scale: [1, 1, 1], // size of shape
-	});
-	var mesh = new SceneObject(sphereGeometry, sphereMaterial, body);
-	
-	objects.push(mesh);
-	scene.add(mesh);
+	for (let i=0; i < 3; i++) {
+		// add a sphere
+		var body = world.addRigidbody({
+			type: LUCID.BODY_DYNAMIC,
+			shape: LUCID.SHAPE_SPHERE,
+			position: [0.5 * (i), 10 * (1 + i), 0], // start position
+			scale: [1, 1, 1], // size of shape
+		});
+		var mesh = new SceneObject(sphereGeometry, sphereMaterial, body);
+
+		objects.push(mesh);
+		scene.add(mesh);
+	}
+
 }
 
 

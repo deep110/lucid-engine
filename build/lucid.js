@@ -171,10 +171,23 @@
             const invLength = 1 / this.length();
             return this.iscale(invLength);
         }
+        safeNormalize() {
+            let len = this.length();
+            if (len > 0.0001) {
+                this.iscale(1 / len);
+            }
+            return this;
+        }
         copy(v) {
             this.x = v.x;
             this.y = v.y;
             this.z = v.z;
+            return this;
+        }
+        negate() {
+            this.x *= -1;
+            this.y *= -1;
+            this.z *= -1;
             return this;
         }
         // applyMatrix3(m, transpose) {
@@ -334,8 +347,8 @@
             }
             this.density = params.density || 1;
             this.restitution = params.restitution || 0.8;
-            this.staticFriction = params.staticFriction || 0.5;
-            this.dynamicFriction = params.dynamicFriction || 0.2;
+            this.staticFriction = params.staticFriction || 0.3;
+            this.dynamicFriction = params.dynamicFriction || 0.1;
         }
         getPosition() {
             return this.position;
@@ -350,11 +363,20 @@
             return this.type == BODY_DYNAMIC && this.invMass > 0;
         }
         move(dt) {
+            if (!this.canMove()) {
+                return;
+            }
             this.linearVelocity.addScaledVector(this.force, this.invMass * dt);
             this.position.addScaledVector(this.linearVelocity, dt);
+            // TODO: account for rotation
             // update collider
             if (this.collider)
                 this.collider.update(this);
+        }
+        applyImpulse(impulse) {
+            if (this.canMove()) {
+                this.linearVelocity.addScaledVector(impulse, this.invMass);
+            }
         }
     }
 
@@ -414,6 +436,8 @@
     class PlaneCollider extends Collider {
         constructor(shapeType, rigidbody) {
             super(shapeType, rigidbody);
+            // TODO: account for rotation
+            this.dims = rigidbody.scale.clone();
             // representing plane in vector form:
             // 
             // Vec(n) . [ Vec(r) - Vec(ro) ] = 0
@@ -439,6 +463,7 @@
         detectCollision(colliderA, colliderB, manifold) {
             const sphere = this.flip ? colliderB : colliderA;
             const plane = this.flip ? colliderA : colliderB;
+            // TODO: add check for plane dimensions for finite planes
             // find the signed distance of sphere's center from plane
             const distance = sphere.center.dot(plane.normal) - plane.d;
             if (MathUtil.abs(distance) < sphere.radius) {
@@ -457,6 +482,18 @@
 
     class SphereSphereCollisionDetector {
         detectCollision(colliderA, colliderB, manifold) {
+            const sphereA = colliderA;
+            const sphereB = colliderB;
+            // distance between their centers should be less than sum of radii
+            let rSum = sphereA.radius + sphereB.radius;
+            let dist = sphereB.center.sub(sphereA.center);
+            if (dist.lengthSq() < rSum * rSum) {
+                manifold.hasCollision = true;
+                let normal = dist.normalize();
+                let A = sphereA.center.clone().addScaledVector(normal, sphereA.radius);
+                let B = sphereB.center.clone().addScaledVector(normal.negate(), sphereA.radius);
+                manifold.update(A, B);
+            }
         }
     }
 
@@ -493,12 +530,10 @@
             // update velocity & position
             for (let i = 0; i < this.rigidbodies.length; i++) {
                 const body = this.rigidbodies[i];
-                if (body.canMove()) {
-                    body.move(this.timestep);
-                    // reset force
-                    body.force.reset();
-                    body.torque.reset();
-                }
+                body.move(this.timestep);
+                // reset force
+                body.force.reset();
+                body.torque.reset();
             }
         }
         setGravity(grArr) {
@@ -546,20 +581,36 @@
                 const bodyB = manifold.bodyB;
                 const relVelocity = bodyB.linearVelocity.sub(bodyA.linearVelocity);
                 // Relative velocity along the normal
-                const contactSpeed = relVelocity.dot(manifold.collisionNormal);
+                let contactSpeed = relVelocity.dot(manifold.collisionNormal);
                 // only proceed forward if bodies are separating
                 if (contactSpeed > 0) {
                     continue;
                 }
+                // Normal Impulse
                 const e = bodyA.restitution * bodyB.restitution;
-                const impulseMag = -(1 + e) * contactSpeed / (bodyA.invMass + bodyB.invMass);
+                const totalInvMass = bodyA.invMass + bodyB.invMass;
+                const impulseMag = -(1 + e) * contactSpeed / totalInvMass;
                 const impulse = manifold.collisionNormal.scale(impulseMag);
-                if (bodyA.canMove()) {
-                    bodyA.linearVelocity.subScaledVector(impulse, bodyA.invMass);
+                bodyB.applyImpulse(impulse);
+                bodyA.applyImpulse(impulse.negate());
+                // Frictional Impulse
+                relVelocity.copy(bodyB.linearVelocity).isub(bodyA.linearVelocity);
+                contactSpeed = relVelocity.dot(manifold.collisionNormal);
+                // get direction of relative velocity perpendicular to collision normal
+                const tangent = relVelocity.clone().subScaledVector(manifold.collisionNormal, contactSpeed);
+                tangent.safeNormalize();
+                let mu = MathUtil.sqrt(bodyA.staticFriction * bodyA.staticFriction + bodyB.staticFriction * bodyB.staticFriction);
+                const frictionImpulseMag = -relVelocity.dot(tangent) / totalInvMass;
+                // use static friction if friction force less than Normal force
+                if (MathUtil.abs(frictionImpulseMag) < impulseMag * mu) {
+                    impulse.copy(tangent).iscale(frictionImpulseMag);
                 }
-                if (bodyB.canMove()) {
-                    bodyB.linearVelocity.addScaledVector(impulse, bodyB.invMass);
+                else {
+                    mu = MathUtil.sqrt(bodyA.dynamicFriction * bodyA.dynamicFriction + bodyB.dynamicFriction * bodyB.dynamicFriction);
+                    impulse.copy(tangent).iscale(-impulseMag * mu);
                 }
+                bodyB.applyImpulse(impulse);
+                bodyA.applyImpulse(impulse.negate());
             }
         }
         createCollider(shape, body) {

@@ -134,10 +134,25 @@ export class Vec3 {
 		return this.iscale(invLength);
 	}
 
+	safeNormalize() {
+		let len = this.length();
+		if (len > 0.0001) {
+			this.iscale(1 / len);
+		}
+		return this;
+	}
+
 	copy(v: Vec3) {
 		this.x = v.x;
 		this.y = v.y;
 		this.z = v.z;
+		return this;
+	}
+
+	negate() {
+		this.x *= -1;
+		this.y *= -1;
+		this.z *= -1;
 		return this;
 	}
 
