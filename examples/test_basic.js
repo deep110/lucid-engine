@@ -1,5 +1,5 @@
 // constants
-const FPS = 20;
+const FPS = 30;
 
 class SceneObject extends THREE.Mesh {
 	constructor(geometry, material, body) {
@@ -27,9 +27,7 @@ let world = new LUCID.World({
 var objects = [];
 
 initializeScene();
-var k = setInterval(update, (1/FPS) * 1000);
-
-var numUpdates = 300;
+setInterval(update, (1/FPS) * 1000);
 
 // update
 function update() {
@@ -44,11 +42,6 @@ function update() {
 		object.quaternion.copy(object.body.getQuaternion());
 	}
 	renderer.render(scene, camera);
-
-	numUpdates -= 1;
-	if (numUpdates <= 0) {
-		clearInterval(k);
-	}
 }
 
 

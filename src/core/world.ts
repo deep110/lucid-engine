@@ -1,4 +1,4 @@
-import { SHAPE_BOX, SHAPE_SPHERE, SHAPE_PLANE } from "../constants";
+import { SHAPE_BOX, SHAPE_SPHERE, SHAPE_PLANE, PENETRATION_ALLOWANCE } from "../constants";
 import { MathUtil, Vec3 } from "../math/index";
 
 import { RigidBody, RigidbodyParams } from "./rigidbody";
@@ -53,6 +53,7 @@ export class World {
 
 		// solve collisions
 		this.runImpulseSolver(collisions);
+		this.runPositionCorrectionSolver(collisions);
 
 		// update velocity & position
 		for (let i = 0; i < this.rigidbodies.length; i++) {
@@ -141,6 +142,7 @@ export class World {
 			bodyA.applyImpulse(impulse.negate());
 
 			// Frictional Impulse
+
 			relVelocity.copy(bodyB.linearVelocity).isub(bodyA.linearVelocity);
 			contactSpeed = relVelocity.dot(manifold.collisionNormal);
 
@@ -153,6 +155,8 @@ export class World {
 			);
 			const frictionImpulseMag = -relVelocity.dot(tangent) / totalInvMass;
 			
+			// Coulomb's Law:  F <= μFn
+			//
 			// use static friction if friction force less than Normal force
 			if (MathUtil.abs(frictionImpulseMag) < impulseMag * mu) {
 				impulse.copy(tangent).iscale(frictionImpulseMag);
@@ -166,6 +170,32 @@ export class World {
 			bodyB.applyImpulse(impulse);
 			bodyA.applyImpulse(impulse.negate());
 
+		}
+	}
+
+	/**
+	 * This is required to prevent rigidbodies from passing each other.
+	 * Impulse resolution does change the velocity but still position needs to be forcefully
+	 * updated to separate out the colliding bodies
+	 *
+	 * @param collisions pairs of colliding rigidbodies
+	 */
+	private runPositionCorrectionSolver(collisions: Manifold[]) {
+		for (let i = 0; i < collisions.length; i++) {
+			const manifold = collisions[i];
+
+			const bodyA = manifold.bodyA;
+			const bodyB = manifold.bodyB;
+
+			let correction = MathUtil.max(0, manifold.penetrationDepth - PENETRATION_ALLOWANCE) * 0.8
+				/ (bodyA.invMass + bodyB.invMass);
+
+			if (bodyA.canMove()) {
+				bodyA.position.subScaledVector(manifold.collisionNormal, bodyA.invMass * correction);
+			}
+			if (bodyB.canMove()) {
+				bodyB.position.addScaledVector(manifold.collisionNormal, bodyB.invMass * correction);
+			}
 		}
 	}
 

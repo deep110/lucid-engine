@@ -17,6 +17,7 @@
     const SHAPE_POLYGON = 5;
     // AABB approximation
     const AABB_PROX = 0.005;
+    const PENETRATION_ALLOWANCE = 0.01;
 
     const MathUtil = {
         abs: Math.abs,
@@ -527,6 +528,7 @@
             const collisions = this.runNarrowPhaseCollisionDetector();
             // solve collisions
             this.runImpulseSolver(collisions);
+            this.runPositionCorrectionSolver(collisions);
             // update velocity & position
             for (let i = 0; i < this.rigidbodies.length; i++) {
                 const body = this.rigidbodies[i];
@@ -601,6 +603,8 @@
                 tangent.safeNormalize();
                 let mu = MathUtil.sqrt(bodyA.staticFriction * bodyA.staticFriction + bodyB.staticFriction * bodyB.staticFriction);
                 const frictionImpulseMag = -relVelocity.dot(tangent) / totalInvMass;
+                // Coulomb's Law:  F <= μFn
+                //
                 // use static friction if friction force less than Normal force
                 if (MathUtil.abs(frictionImpulseMag) < impulseMag * mu) {
                     impulse.copy(tangent).iscale(frictionImpulseMag);
@@ -611,6 +615,28 @@
                 }
                 bodyB.applyImpulse(impulse);
                 bodyA.applyImpulse(impulse.negate());
+            }
+        }
+        /**
+         * This is required to prevent rigidbodies from passing each other.
+         * Impulse resolution does change the velocity but still position needs to be forcefully
+         * updated to separate out the colliding bodies
+         *
+         * @param collisions pairs of colliding rigidbodies
+         */
+        runPositionCorrectionSolver(collisions) {
+            for (let i = 0; i < collisions.length; i++) {
+                const manifold = collisions[i];
+                const bodyA = manifold.bodyA;
+                const bodyB = manifold.bodyB;
+                let correction = MathUtil.max(0, manifold.penetrationDepth - PENETRATION_ALLOWANCE) * 0.8
+                    / (bodyA.invMass + bodyB.invMass);
+                if (bodyA.canMove()) {
+                    bodyA.position.subScaledVector(manifold.collisionNormal, bodyA.invMass * correction);
+                }
+                if (bodyB.canMove()) {
+                    bodyB.position.addScaledVector(manifold.collisionNormal, bodyB.invMass * correction);
+                }
             }
         }
         createCollider(shape, body) {
@@ -629,6 +655,7 @@
     exports.BODY_DYNAMIC = BODY_DYNAMIC;
     exports.BODY_KINEMATIC = BODY_KINEMATIC;
     exports.BODY_STATIC = BODY_STATIC;
+    exports.PENETRATION_ALLOWANCE = PENETRATION_ALLOWANCE;
     exports.Quaternion = Quaternion;
     exports.RigidBody = RigidBody;
     exports.SHAPE_BOX = SHAPE_BOX;
