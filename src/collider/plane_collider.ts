@@ -20,11 +20,12 @@ export class PlaneCollider extends Collider {
         // where,
         //     ro is any point on the plane
         //     n is normal vector perpendicular to plane
-        this.normal = new Vec3();
+        this.normal = new Vec3(0, 0, 1);
         this.point = rigidbody.position.clone();
 
         // for now set the normal
-        this.normal.set(0, 1, 0);
+        // this.normal.set(0, 1, 0);
+        this.normal.rotate(rigidbody.rotation);
 
         // cache the Vec(n) . Vec(ro)
         this.d = this.normal.dot(this.point);

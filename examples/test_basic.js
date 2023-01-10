@@ -99,7 +99,7 @@ function setupRenderingStuff() {
 
 
 function addGround() {
-	var size = 20;
+	var size = 25;
 	var geometry = new THREE.PlaneGeometry(size, size);
 	var material = new THREE.MeshStandardMaterial({ color: 0xffffff , side: THREE.DoubleSide });
 
@@ -108,7 +108,8 @@ function addGround() {
 		shape: LUCID.SHAPE_PLANE,
 		scale: [size, size, 1],
 		position: [0, 0, 0],
-		rotation: [Math.PI/2, 0, 0],
+		rotation: [-Math.PI/2, 0, 0],
+		rotationOrder: "XYZ", // use the three.js default order
 	});
 	var mesh = new SceneObject(geometry, material, body);
 

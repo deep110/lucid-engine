@@ -1,3 +1,4 @@
+import { Quaternion } from "./quat";
 import { MathUtil } from "./utils";
 
 export class Vec3 {
@@ -156,6 +157,21 @@ export class Vec3 {
 		return this;
 	}
 
+	rotate(q: Quaternion) {
+		// v' = q^−1 vq
+
+		// calculate quat * vector
+		const ix = q.w * this.x + q.y * this.z - q.z * this.y;
+		const iy = q.w * this.y + q.z * this.x - q.x * this.z;
+		const iz = q.w * this.z + q.x * this.y - q.y * this.x;
+		const iw = -q.x * this.x - q.y * this.y - q.z * this.z;
+
+		// calculate result * inverse quat
+		this.x = ix * q.w + iw * -q.x + iy * -q.z - iz * -q.y;
+		this.y = iy * q.w + iw * -q.y + iz * -q.x - ix * -q.z;
+		this.z = iz * q.w + iw * -q.z + ix * -q.y - iy * -q.x;
+	}
+
 	// applyMatrix3(m, transpose) {
 
 	// 	const x = this.x, y = this.y, z = this.z;
@@ -170,32 +186,6 @@ export class Vec3 {
 	// 		this.y = e[1] * x + e[4] * y + e[7] * z;
 	// 		this.z = e[2] * x + e[5] * y + e[8] * z;
 	// 	}
-
-	// 	return this;
-	// }
-
-	// applyQuaternion(q) {
-	// 	const x = this.x;
-	// 	const y = this.y;
-	// 	const z = this.z;
-
-	// 	const qx = q.x;
-	// 	const qy = q.y;
-	// 	const qz = q.z;
-	// 	const qw = q.w;
-
-	// 	// calculate quat * vector
-
-	// 	const ix = qw * x + qy * z - qz * y;
-	// 	const iy = qw * y + qz * x - qx * z;
-	// 	const iz = qw * z + qx * y - qy * x;
-	// 	const iw = -qx * x - qy * y - qz * z;
-
-	// 	// calculate result * inverse quat
-
-	// 	this.x = ix * qw + iw * -qx + iy * -qz - iz * -qy;
-	// 	this.y = iy * qw + iw * -qy + iz * -qx - ix * -qz;
-	// 	this.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
 
 	// 	return this;
 	// }

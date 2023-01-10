@@ -84,7 +84,7 @@ export class World {
 		return rb;
 	}
 
-	removeRigidbody() {
+	removeRigidbody(rb: RigidBody) {
 	}
 
 	getNumRigidbodies() {

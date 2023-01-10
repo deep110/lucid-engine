@@ -9,6 +9,7 @@ export type RigidbodyParams = {
 	position: number[] | undefined;
 	rotation: number[] | undefined;
 	scale: number[] | undefined;
+	rotationOrder: string | undefined;
 	restitution: number | undefined;
 	staticFriction: number | undefined;
 	dynamicFriction: number | undefined;
@@ -50,8 +51,8 @@ export class RigidBody {
 
 		if (params.position !== undefined) this.position.fromArray(params.position);
 		if (params.rotation !== undefined) {
-			const r = new Vec3().fromArray(params.rotation);
-			this.rotation.fromEuler(r);
+			let order = params.rotationOrder || "XYZ";
+			this.rotation.fromEuler(params.rotation, order);
 		}
 		if (params.scale !== undefined) this.scale.fromArray(params.scale);
 

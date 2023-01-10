@@ -1,5 +1,4 @@
 import { MathUtil } from "./utils";
-import { Vec3 } from "./vec3";
 
 class Quaternion {
 	x: number;
@@ -44,7 +43,7 @@ class Quaternion {
 
 	normalize() {
         let l = this.length();
-        if (l === 0) {
+        if (l < 0.0001) {
             this.set(0, 0, 0, 1);
         } else {
             l = 1 / l;
@@ -67,11 +66,85 @@ class Quaternion {
         return this.conjugate().normalize();
     }
 
-	fromEuler(v: Vec3) {
-		this.x = MathUtil.cos(v.z/2) * MathUtil.cos(v.y/2) * MathUtil.sin(v.x/2) - MathUtil.sin(v.z/2) * MathUtil.sin(v.y/2) * MathUtil.cos(v.x/2);
-		this.y = MathUtil.cos(v.z/2) * MathUtil.sin(v.y/2) * MathUtil.cos(v.x/2) + MathUtil.sin(v.z/2) * MathUtil.cos(v.y/2) * MathUtil.sin(v.x/2);
-		this.z = MathUtil.sin(v.z/2) * MathUtil.cos(v.y/2) * MathUtil.cos(v.x/2) - MathUtil.cos(v.z/2) * MathUtil.sin(v.y/2) * MathUtil.sin(v.x/2);
-		this.w = MathUtil.cos(v.z/2) * MathUtil.cos(v.y/2) * MathUtil.cos(v.x/2) + MathUtil.sin(v.z/2) * MathUtil.sin(v.y/2) * MathUtil.sin(v.x/2);
+	multiply(q: Quaternion) {
+		let r = new Quaternion();
+		return r.multiplyQuaternions(this, q);
+	}
+
+	imultiply(q: Quaternion) {
+		return this.multiplyQuaternions(this, q);
+	}
+
+	multiplyQuaternions(a: Quaternion, b: Quaternion) {
+		// from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
+
+		const qax = a.x, qay = a.y, qaz = a.z, qaw = a.w;
+		const qbx = b.x, qby = b.y, qbz = b.z, qbw = b.w;
+
+		this.x = qax * qbw + qaw * qbx + qay * qbz - qaz * qby;
+		this.y = qay * qbw + qaw * qby + qaz * qbx - qax * qbz;
+		this.z = qaz * qbw + qaw * qbz + qax * qby - qay * qbx;
+		this.w = qaw * qbw - qax * qbx - qay * qby - qaz * qbz;
+
+		return this;
+	}
+
+	fromEuler(rotation: number[], order: string) {
+		const c1 = MathUtil.cos(rotation[0] / 2);
+		const c2 = MathUtil.cos(rotation[1] / 2);
+		const c3 = MathUtil.cos(rotation[2] / 2);
+
+		const s1 = MathUtil.sin(rotation[0] / 2);
+		const s2 = MathUtil.sin(rotation[1] / 2);
+		const s3 = MathUtil.sin(rotation[2] / 2);
+
+		switch (order) {
+			case 'XYZ':
+				this.x = s1 * c2 * c3 + c1 * s2 * s3;
+				this.y = c1 * s2 * c3 - s1 * c2 * s3;
+				this.z = c1 * c2 * s3 + s1 * s2 * c3;
+				this.w = c1 * c2 * c3 - s1 * s2 * s3;
+				break;
+
+			case 'YXZ':
+				this.x = s1 * c2 * c3 + c1 * s2 * s3;
+				this.y = c1 * s2 * c3 - s1 * c2 * s3;
+				this.z = c1 * c2 * s3 - s1 * s2 * c3;
+				this.w = c1 * c2 * c3 + s1 * s2 * s3;
+				break;
+
+			case 'ZXY':
+				this.x = s1 * c2 * c3 - c1 * s2 * s3;
+				this.y = c1 * s2 * c3 + s1 * c2 * s3;
+				this.z = c1 * c2 * s3 + s1 * s2 * c3;
+				this.w = c1 * c2 * c3 - s1 * s2 * s3;
+				break;
+
+			case 'ZYX':
+				this.x = s1 * c2 * c3 - c1 * s2 * s3;
+				this.y = c1 * s2 * c3 + s1 * c2 * s3;
+				this.z = c1 * c2 * s3 - s1 * s2 * c3;
+				this.w = c1 * c2 * c3 + s1 * s2 * s3;
+				break;
+
+			case 'YZX':
+				this.x = s1 * c2 * c3 + c1 * s2 * s3;
+				this.y = c1 * s2 * c3 + s1 * c2 * s3;
+				this.z = c1 * c2 * s3 - s1 * s2 * c3;
+				this.w = c1 * c2 * c3 - s1 * s2 * s3;
+				break;
+
+			case 'XZY':
+				this.x = s1 * c2 * c3 - c1 * s2 * s3;
+				this.y = c1 * s2 * c3 - s1 * c2 * s3;
+				this.z = c1 * c2 * s3 + s1 * s2 * c3;
+				this.w = c1 * c2 * c3 + s1 * s2 * s3;
+				break;
+
+			default:
+				console.warn('LUCID.Quaternion: .fromEuler() encountered an unknown order: ' + order);
+		}
+		return this;
 	}
 }
 

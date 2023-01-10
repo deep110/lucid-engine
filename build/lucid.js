@@ -191,6 +191,18 @@
             this.z *= -1;
             return this;
         }
+        rotate(q) {
+            // v' = q^−1 vq
+            // calculate quat * vector
+            const ix = q.w * this.x + q.y * this.z - q.z * this.y;
+            const iy = q.w * this.y + q.z * this.x - q.x * this.z;
+            const iz = q.w * this.z + q.x * this.y - q.y * this.x;
+            const iw = -q.x * this.x - q.y * this.y - q.z * this.z;
+            // calculate result * inverse quat
+            this.x = ix * q.w + iw * -q.x + iy * -q.z - iz * -q.y;
+            this.y = iy * q.w + iw * -q.y + iz * -q.x - ix * -q.z;
+            this.z = iz * q.w + iw * -q.z + ix * -q.y - iy * -q.x;
+        }
         // applyMatrix3(m, transpose) {
         // 	const x = this.x, y = this.y, z = this.z;
         // 	const e = m.elements;
@@ -203,25 +215,6 @@
         // 		this.y = e[1] * x + e[4] * y + e[7] * z;
         // 		this.z = e[2] * x + e[5] * y + e[8] * z;
         // 	}
-        // 	return this;
-        // }
-        // applyQuaternion(q) {
-        // 	const x = this.x;
-        // 	const y = this.y;
-        // 	const z = this.z;
-        // 	const qx = q.x;
-        // 	const qy = q.y;
-        // 	const qz = q.z;
-        // 	const qw = q.w;
-        // 	// calculate quat * vector
-        // 	const ix = qw * x + qy * z - qz * y;
-        // 	const iy = qw * y + qz * x - qx * z;
-        // 	const iz = qw * z + qx * y - qy * x;
-        // 	const iw = -qx * x - qy * y - qz * z;
-        // 	// calculate result * inverse quat
-        // 	this.x = ix * qw + iw * -qx + iy * -qz - iz * -qy;
-        // 	this.y = iy * qw + iw * -qy + iz * -qx - ix * -qz;
-        // 	this.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
         // 	return this;
         // }
         isZero() {
@@ -292,7 +285,7 @@
         }
         normalize() {
             let l = this.length();
-            if (l === 0) {
+            if (l < 0.0001) {
                 this.set(0, 0, 0, 1);
             }
             else {
@@ -313,11 +306,71 @@
         inverse() {
             return this.conjugate().normalize();
         }
-        fromEuler(v) {
-            this.x = MathUtil.cos(v.z / 2) * MathUtil.cos(v.y / 2) * MathUtil.sin(v.x / 2) - MathUtil.sin(v.z / 2) * MathUtil.sin(v.y / 2) * MathUtil.cos(v.x / 2);
-            this.y = MathUtil.cos(v.z / 2) * MathUtil.sin(v.y / 2) * MathUtil.cos(v.x / 2) + MathUtil.sin(v.z / 2) * MathUtil.cos(v.y / 2) * MathUtil.sin(v.x / 2);
-            this.z = MathUtil.sin(v.z / 2) * MathUtil.cos(v.y / 2) * MathUtil.cos(v.x / 2) - MathUtil.cos(v.z / 2) * MathUtil.sin(v.y / 2) * MathUtil.sin(v.x / 2);
-            this.w = MathUtil.cos(v.z / 2) * MathUtil.cos(v.y / 2) * MathUtil.cos(v.x / 2) + MathUtil.sin(v.z / 2) * MathUtil.sin(v.y / 2) * MathUtil.sin(v.x / 2);
+        multiply(q) {
+            let r = new Quaternion();
+            return r.multiplyQuaternions(this, q);
+        }
+        imultiply(q) {
+            return this.multiplyQuaternions(this, q);
+        }
+        multiplyQuaternions(a, b) {
+            // from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
+            const qax = a.x, qay = a.y, qaz = a.z, qaw = a.w;
+            const qbx = b.x, qby = b.y, qbz = b.z, qbw = b.w;
+            this.x = qax * qbw + qaw * qbx + qay * qbz - qaz * qby;
+            this.y = qay * qbw + qaw * qby + qaz * qbx - qax * qbz;
+            this.z = qaz * qbw + qaw * qbz + qax * qby - qay * qbx;
+            this.w = qaw * qbw - qax * qbx - qay * qby - qaz * qbz;
+            return this;
+        }
+        fromEuler(rotation, order) {
+            const c1 = MathUtil.cos(rotation[0] / 2);
+            const c2 = MathUtil.cos(rotation[1] / 2);
+            const c3 = MathUtil.cos(rotation[2] / 2);
+            const s1 = MathUtil.sin(rotation[0] / 2);
+            const s2 = MathUtil.sin(rotation[1] / 2);
+            const s3 = MathUtil.sin(rotation[2] / 2);
+            switch (order) {
+                case 'XYZ':
+                    this.x = s1 * c2 * c3 + c1 * s2 * s3;
+                    this.y = c1 * s2 * c3 - s1 * c2 * s3;
+                    this.z = c1 * c2 * s3 + s1 * s2 * c3;
+                    this.w = c1 * c2 * c3 - s1 * s2 * s3;
+                    break;
+                case 'YXZ':
+                    this.x = s1 * c2 * c3 + c1 * s2 * s3;
+                    this.y = c1 * s2 * c3 - s1 * c2 * s3;
+                    this.z = c1 * c2 * s3 - s1 * s2 * c3;
+                    this.w = c1 * c2 * c3 + s1 * s2 * s3;
+                    break;
+                case 'ZXY':
+                    this.x = s1 * c2 * c3 - c1 * s2 * s3;
+                    this.y = c1 * s2 * c3 + s1 * c2 * s3;
+                    this.z = c1 * c2 * s3 + s1 * s2 * c3;
+                    this.w = c1 * c2 * c3 - s1 * s2 * s3;
+                    break;
+                case 'ZYX':
+                    this.x = s1 * c2 * c3 - c1 * s2 * s3;
+                    this.y = c1 * s2 * c3 + s1 * c2 * s3;
+                    this.z = c1 * c2 * s3 - s1 * s2 * c3;
+                    this.w = c1 * c2 * c3 + s1 * s2 * s3;
+                    break;
+                case 'YZX':
+                    this.x = s1 * c2 * c3 + c1 * s2 * s3;
+                    this.y = c1 * s2 * c3 + s1 * c2 * s3;
+                    this.z = c1 * c2 * s3 - s1 * s2 * c3;
+                    this.w = c1 * c2 * c3 - s1 * s2 * s3;
+                    break;
+                case 'XZY':
+                    this.x = s1 * c2 * c3 - c1 * s2 * s3;
+                    this.y = c1 * s2 * c3 - s1 * c2 * s3;
+                    this.z = c1 * c2 * s3 + s1 * s2 * c3;
+                    this.w = c1 * c2 * c3 + s1 * s2 * s3;
+                    break;
+                default:
+                    console.warn('LUCID.Quaternion: .fromEuler() encountered an unknown order: ' + order);
+            }
+            return this;
         }
     }
 
@@ -330,8 +383,8 @@
             if (params.position !== undefined)
                 this.position.fromArray(params.position);
             if (params.rotation !== undefined) {
-                const r = new Vec3().fromArray(params.rotation);
-                this.rotation.fromEuler(r);
+                let order = params.rotationOrder || "XYZ";
+                this.rotation.fromEuler(params.rotation, order);
             }
             if (params.scale !== undefined)
                 this.scale.fromArray(params.scale);
@@ -445,10 +498,11 @@
             // where,
             //     ro is any point on the plane
             //     n is normal vector perpendicular to plane
-            this.normal = new Vec3();
+            this.normal = new Vec3(0, 0, 1);
             this.point = rigidbody.position.clone();
             // for now set the normal
-            this.normal.set(0, 1, 0);
+            // this.normal.set(0, 1, 0);
+            this.normal.rotate(rigidbody.rotation);
             // cache the Vec(n) . Vec(ro)
             this.d = this.normal.dot(this.point);
         }
@@ -552,7 +606,7 @@
             this.rigidbodies.push(rb);
             return rb;
         }
-        removeRigidbody() {
+        removeRigidbody(rb) {
         }
         getNumRigidbodies() {
             return this.rigidbodies.length;
