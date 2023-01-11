@@ -1,10 +1,12 @@
 # LucidEngine
-A basic physics2D engine for learning purposes. For a detailed explanation see my blog [here](https://deep110.github.io/posts/blogs/2019-01-13-implementing-2D-game-engine.html).
+
+A basic 3D physics engine for learning purposes. For a detailed explanation see my blog [here](https://deep110.github.io/posts/blogs/2019-01-13-implementing-2D-game-engine.html).
 
 ![](demo/output.gif)
 
 
 ### Project Structure
+
 The project is divided into two sections:
 1. Physics Part
     * Like all physics engines, assumes all bodies are rigid bodies.
@@ -20,6 +22,7 @@ Both part can be used independently, but for demo purposes some code do overlap.
 
 
 ### Physics Explanation
+
 Mainly simulation consists of three steps
 
 1. Calculate colliding pairs of rigidbodies i.e NarrowPhase calculation

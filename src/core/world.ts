@@ -87,6 +87,10 @@ export class World {
 	removeRigidbody(rb: RigidBody) {
 	}
 
+	clear() {
+		this.rigidbodies = [];
+	}
+
 	getNumRigidbodies() {
 		return this.rigidbodies.length;
 	}

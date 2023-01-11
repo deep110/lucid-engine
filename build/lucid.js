@@ -608,6 +608,9 @@
         }
         removeRigidbody(rb) {
         }
+        clear() {
+            this.rigidbodies = [];
+        }
         getNumRigidbodies() {
             return this.rigidbodies.length;
         }
