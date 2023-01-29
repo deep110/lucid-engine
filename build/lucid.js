@@ -374,6 +374,25 @@
         }
     }
 
+    class Mat33 {
+        constructor() {
+            this.elements = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+        }
+        set(e00, e01, e02, e10, e11, e12, e20, e21, e22) {
+            var te = this.elements;
+            te[0] = e00;
+            te[1] = e01;
+            te[2] = e02;
+            te[3] = e10;
+            te[4] = e11;
+            te[5] = e12;
+            te[6] = e20;
+            te[7] = e21;
+            te[8] = e22;
+            return this;
+        }
+    }
+
     class RigidBody {
         constructor(params) {
             this.id = MathUtil.generateUUID();
@@ -388,13 +407,14 @@
             }
             if (params.scale !== undefined)
                 this.scale.fromArray(params.scale);
-            this.force = new Vec3();
-            this.torque = new Vec3();
+            this.netForce = new Vec3();
+            this.netTorque = new Vec3();
             this.linearVelocity = new Vec3();
             this.angularVelocity = new Vec3();
             this.type = params.type || BODY_DYNAMIC;
             this.mass = 1;
             this.invMass = 1 / this.mass;
+            this.invInertia = new Mat33();
             if (this.type == BODY_STATIC) {
                 this.mass = MathUtil.INF;
                 this.invMass = 0;
@@ -416,21 +436,31 @@
         canMove() {
             return this.type == BODY_DYNAMIC && this.invMass > 0;
         }
+        applyForce(force, point) {
+            this.netForce.addScaledVector(force, this.mass);
+            // if point is passed, then force might not be getting applied on COM
+            // this will also give rise to `Torque = F x r`
+            if (point) {
+                let r = point.sub(this.position);
+                this.netTorque.iadd(r.cross(force));
+            }
+        }
+        applyImpulse(impulse) {
+            if (this.canMove()) {
+                this.linearVelocity.addScaledVector(impulse, this.invMass);
+                // TODO also account for angular velocity
+            }
+        }
         move(dt) {
             if (!this.canMove()) {
                 return;
             }
-            this.linearVelocity.addScaledVector(this.force, this.invMass * dt);
+            this.linearVelocity.addScaledVector(this.netForce, this.invMass * dt);
             this.position.addScaledVector(this.linearVelocity, dt);
             // TODO: account for rotation
             // update collider
             if (this.collider)
                 this.collider.update(this);
-        }
-        applyImpulse(impulse) {
-            if (this.canMove()) {
-                this.linearVelocity.addScaledVector(impulse, this.invMass);
-            }
         }
     }
 
@@ -571,25 +601,22 @@
             this.detector[SHAPE_PLANE][SHAPE_SPHERE] = new SpherePlaneCollisionDetector(true);
         }
         step() {
-            // apply gravity force
-            for (let i = 0; i < this.rigidbodies.length; i++) {
-                const body = this.rigidbodies[i];
-                if (body.canMove()) {
-                    body.force.addScaledVector(this.gravity, body.mass);
-                }
-            }
             // find collisions using narrow phase
             const collisions = this.runNarrowPhaseCollisionDetector();
             // solve collisions
             this.runImpulseSolver(collisions);
             this.runPositionCorrectionSolver(collisions);
-            // update velocity & position
+            // calculate net force on body, right now it is just gravity
+            for (let i = 0; i < this.rigidbodies.length; i++) {
+                this.rigidbodies[i].applyForce(this.gravity);
+            }
+            // update velocity & position due to net force
             for (let i = 0; i < this.rigidbodies.length; i++) {
                 const body = this.rigidbodies[i];
                 body.move(this.timestep);
                 // reset force
-                body.force.reset();
-                body.torque.reset();
+                body.netForce.reset();
+                body.netTorque.reset();
             }
         }
         setGravity(grArr) {

@@ -40,14 +40,6 @@ export class World {
 	}
 
 	step() {
-		// apply gravity force
-		for (let i = 0; i < this.rigidbodies.length; i++) {
-			const body = this.rigidbodies[i];
-			if (body.canMove()) {
-				body.force.addScaledVector(this.gravity, body.mass);
-			}
-		}
-
 		// find collisions using narrow phase
 		const collisions = this.runNarrowPhaseCollisionDetector();
 
@@ -55,14 +47,19 @@ export class World {
 		this.runImpulseSolver(collisions);
 		this.runPositionCorrectionSolver(collisions);
 
-		// update velocity & position
+		// calculate net force on body, right now it is just gravity
+		for (let i = 0; i < this.rigidbodies.length; i++) {
+			this.rigidbodies[i].applyForce(this.gravity);
+		}
+
+		// update velocity & position due to net force
 		for (let i = 0; i < this.rigidbodies.length; i++) {
 			const body = this.rigidbodies[i];
 			body.move(this.timestep);
 
 			// reset force
-			body.force.reset();
-			body.torque.reset();
+			body.netForce.reset();
+			body.netTorque.reset();
 		}
 	}
 

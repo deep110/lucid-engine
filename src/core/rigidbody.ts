@@ -1,4 +1,4 @@
-import { MathUtil, Vec3, Quaternion } from "../math/index";
+import { MathUtil, Vec3, Quaternion, Mat33 } from "../math/index";
 import { BODY_DYNAMIC, BODY_STATIC } from "../constants";
 import { Collider } from "../collider/index";
 
@@ -29,8 +29,9 @@ export class RigidBody {
 	// kinematics
 	mass: number;
 	invMass: number;
-	force: Vec3;
-	torque: Vec3;
+	invInertia: Mat33;
+	netForce: Vec3;
+	netTorque: Vec3;
 	linearVelocity: Vec3;
 	angularVelocity: Vec3;
 
@@ -56,14 +57,15 @@ export class RigidBody {
 		}
 		if (params.scale !== undefined) this.scale.fromArray(params.scale);
 
-		this.force = new Vec3();
-		this.torque = new Vec3();
+		this.netForce = new Vec3();
+		this.netTorque = new Vec3();
 		this.linearVelocity = new Vec3();
 		this.angularVelocity = new Vec3();
 
 		this.type = params.type || BODY_DYNAMIC;
 		this.mass = 1;
 		this.invMass = 1 / this.mass;
+		this.invInertia = new Mat33();
 
 		if (this.type == BODY_STATIC) {
 			this.mass = MathUtil.INF;
@@ -92,22 +94,34 @@ export class RigidBody {
 		return this.type == BODY_DYNAMIC && this.invMass > 0;
 	}
 
-	move(dt: number) {
-		if (!this.canMove()) {
-			return;
+	applyForce(force: Vec3, point?: Vec3) {
+		this.netForce.addScaledVector(force, this.mass);
+
+		// if point is passed, then force might not be getting applied on COM
+		// this will also give rise to `Torque = F x r`
+		if (point) {
+			let r = point.sub(this.position);
+			this.netTorque.iadd(r.cross(force));
 		}
-
-		this.linearVelocity.addScaledVector(this.force, this.invMass * dt);
-		this.position.addScaledVector(this.linearVelocity, dt);
-		// TODO: account for rotation
-
-		// update collider
-		if (this.collider) this.collider.update(this);
 	}
 
 	applyImpulse(impulse: Vec3) {
 		if (this.canMove()) {
 			this.linearVelocity.addScaledVector(impulse, this.invMass);
+			// TODO also account for angular velocity
 		}
+	}
+
+	move(dt: number) {
+		if (!this.canMove()) {
+			return;
+		}
+
+		this.linearVelocity.addScaledVector(this.netForce, this.invMass * dt);
+		this.position.addScaledVector(this.linearVelocity, dt);
+		// TODO: account for rotation
+
+		// update collider
+		if (this.collider) this.collider.update(this);
 	}
 }
