@@ -216,8 +216,14 @@ class Vec3 {
             return true;
         return false;
     }
-    equals(v) {
-        return v.x === this.x && v.y === this.y && v.z === this.z;
+    equals(v, y, z) {
+        if (v instanceof Vec3) {
+            return v.x === this.x && v.y === this.y && v.z === this.z;
+        }
+        else if (y !== undefined && z !== undefined) {
+            return v == this.x && y === this.y && z === this.z;
+        }
+        return false;
     }
     clone() {
         return new Vec3(this.x, this.y, this.z);
@@ -385,6 +391,41 @@ class Mat33 {
         te[8] = e22;
         return this;
     }
+    invert() {
+        var tm = this.elements;
+        let a00 = tm[0], a10 = tm[3], a20 = tm[6], a01 = tm[1], a11 = tm[4], a21 = tm[7], a02 = tm[2], a12 = tm[5], a22 = tm[8], b01 = a22 * a11 - a12 * a21, b11 = -a22 * a10 + a12 * a20, b21 = a21 * a10 - a11 * a20, det = a00 * b01 + a01 * b11 + a02 * b21;
+        if (det === 0) {
+            return this.identity();
+        }
+        det = 1.0 / det;
+        tm[0] = b01 * det;
+        tm[1] = (-a22 * a01 + a02 * a21) * det;
+        tm[2] = (a12 * a01 - a02 * a11) * det;
+        tm[3] = b11 * det;
+        tm[4] = (a22 * a00 - a02 * a20) * det;
+        tm[5] = (-a12 * a00 + a02 * a10) * det;
+        tm[6] = b21 * det;
+        tm[7] = (-a21 * a00 + a01 * a20) * det;
+        tm[8] = (a11 * a00 - a01 * a10) * det;
+        return this;
+    }
+    identity() {
+        this.set(1, 0, 0, 0, 1, 0, 0, 0, 1);
+        return this;
+    }
+    determinant() {
+        var te = this.elements;
+        return te[0] * te[4] * te[8] - te[0] * te[5] * te[7] - te[1] * te[3] * te[8] + te[1] * te[5] * te[6]
+            + te[2] * te[3] * te[7] - te[2] * te[4] * te[6];
+    }
+    fromArray(array, offset) {
+        if (offset === undefined)
+            offset = 0;
+        for (var i = 0; i < 9; i++) {
+            this.elements[i] = array[i + offset];
+        }
+        return this;
+    }
 }
 
 class RigidBody {
@@ -406,14 +447,10 @@ class RigidBody {
         this.linearVelocity = new Vec3();
         this.angularVelocity = new Vec3();
         this.type = params.type || BODY_DYNAMIC;
-        this.mass = 1;
+        this.mass = params.mass || 1.0;
         this.invMass = 1 / this.mass;
         this.invInertia = new Mat33();
-        if (this.type == BODY_STATIC) {
-            this.mass = MathUtil.INF;
-            this.invMass = 0;
-        }
-        this.density = params.density || 1;
+        this.invModelInertia = new Mat33();
         this.restitution = params.restitution || 0.8;
         this.staticFriction = params.staticFriction || 0.3;
         this.dynamicFriction = params.dynamicFriction || 0.1;
@@ -424,13 +461,20 @@ class RigidBody {
     getQuaternion() {
         return this.rotation;
     }
+    getScale() {
+        return this.scale;
+    }
     addCollider(collider) {
         this.collider = collider;
+        this.calculateMassInfo();
     }
     canMove() {
         return this.type == BODY_DYNAMIC && this.invMass > 0;
     }
     applyForce(force, point) {
+        if (!this.canMove()) {
+            return;
+        }
         this.netForce.addScaledVector(force, this.mass);
         // if point is passed, then force might not be getting applied on COM
         // this will also give rise to `Torque = F x r`
@@ -442,19 +486,36 @@ class RigidBody {
     applyImpulse(impulse) {
         if (this.canMove()) {
             this.linearVelocity.addScaledVector(impulse, this.invMass);
-            // TODO also account for angular velocity
+            // TODO: also account for angular velocity
         }
     }
     move(dt) {
+        var _a;
         if (!this.canMove()) {
             return;
         }
+        // integrate velocity
         this.linearVelocity.addScaledVector(this.netForce, this.invMass * dt);
+        // this.angularVelocity = (body->m_invInertiaWorld * body->m_torque) * dt;
+        // integrate position
         this.position.addScaledVector(this.linearVelocity, dt);
+        // this.rotation
         // TODO: account for rotation
         // update collider
-        if (this.collider)
-            this.collider.update(this);
+        (_a = this.collider) === null || _a === void 0 ? void 0 : _a.update(this);
+    }
+    calculateMassInfo() {
+        var _a;
+        if (this.type == BODY_STATIC) {
+            this.invMass = 0;
+            this.mass = 0;
+            this.invModelInertia.set(0, 0, 0, 0, 0, 0, 0, 0, 0);
+            return;
+        }
+        // set the initial inertia of the model
+        (_a = this.collider) === null || _a === void 0 ? void 0 : _a.calculateMassInfo(this.mass, this.invModelInertia);
+        // invert the inertia
+        this.invModelInertia.invert();
     }
 }
 
@@ -486,8 +547,11 @@ class Collider {
     constructor(shapeType, rigidbody) {
         this.shape = shapeType;
     }
+    calculateMassInfo(mass, inertia) {
+        throw new Error("Collider: calculateMassInfo - Inheritance Error");
+    }
     update(rigidbody) {
-        throw new Error("Collider: Update Inheritance Error");
+        throw new Error("Collider: Update - Inheritance Error");
     }
 }
 
@@ -505,6 +569,10 @@ class SphereCollider extends Collider {
         this.radius = rigidbody.scale.x;
         // set center
         this.center = rigidbody.position.clone();
+    }
+    calculateMassInfo(mass, inertia) {
+        let inertiaValue = mass * this.radius * this.radius * 0.4;
+        inertia.set(inertiaValue, 0, 0, 0, inertiaValue, 0, 0, 0, inertiaValue);
     }
     update(rigidbody) {
         this.center.copy(rigidbody.position);
@@ -529,6 +597,10 @@ class PlaneCollider extends Collider {
         this.normal.rotate(rigidbody.rotation);
         // cache the Vec(n) . Vec(ro)
         this.d = this.normal.dot(this.point);
+    }
+    calculateMassInfo(mass, inertia) {
+        let inertiaValue = 1;
+        inertia.set(inertiaValue, 0, 0, 0, inertiaValue, 0, 0, 0, inertiaValue);
     }
     update(rigidbody) {
         // planes don't move or rotate
@@ -600,13 +672,11 @@ class World {
         // solve collisions
         this.runImpulseSolver(collisions);
         this.runPositionCorrectionSolver(collisions);
-        // calculate net force on body, right now it is just gravity
-        for (let i = 0; i < this.rigidbodies.length; i++) {
-            this.rigidbodies[i].applyForce(this.gravity);
-        }
-        // update velocity & position due to net force
         for (let i = 0; i < this.rigidbodies.length; i++) {
             const body = this.rigidbodies[i];
+            // calculate net force on body, right now it is just gravity
+            body.applyForce(this.gravity);
+            // move the body due to force or impulse during collision
             body.move(this.timestep);
             // reset force
             body.netForce.reset();
@@ -729,4 +799,4 @@ class World {
     }
 }
 
-export { AABB_PROX, BODY_DYNAMIC, BODY_KINEMATIC, BODY_STATIC, PENETRATION_ALLOWANCE, Quaternion, RigidBody, SHAPE_BOX, SHAPE_CAPSULE, SHAPE_CYLINDER, SHAPE_PLANE, SHAPE_POLYGON, SHAPE_SPHERE, Vec3, World };
+export { AABB_PROX, BODY_DYNAMIC, BODY_KINEMATIC, BODY_STATIC, Mat33, PENETRATION_ALLOWANCE, Quaternion, RigidBody, SHAPE_BOX, SHAPE_CAPSULE, SHAPE_CYLINDER, SHAPE_PLANE, SHAPE_POLYGON, SHAPE_SPHERE, Vec3, World };

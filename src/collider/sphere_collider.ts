@@ -1,4 +1,4 @@
-import { Vec3 } from "../math/index";
+import { Mat33, Vec3 } from "../math/index";
 import { Collider } from "./collider";
 import { RigidBody } from "../core/rigidbody";
 
@@ -15,7 +15,13 @@ export class SphereCollider extends Collider {
         this.center = rigidbody.position.clone();
     }
 
-    update(rigidbody: RigidBody) {
+    calculateMassInfo(mass: number, inertia: Mat33): void {
+        let inertiaValue = mass * this.radius * this.radius * 0.4;
+
+		inertia.set(inertiaValue, 0, 0, 0, inertiaValue, 0, 0, 0, inertiaValue);
+    }
+
+    update(rigidbody: RigidBody): void {
         this.center.copy(rigidbody.position);
     }
 }

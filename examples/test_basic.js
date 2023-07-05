@@ -13,6 +13,7 @@ let canvas = document.getElementById("canvas");
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
 let renderer = new THREE.WebGLRenderer({ canvas: canvas });
+let stats = new Stats();
 
 // initialize physics world
 let world = new LUCID.World({
@@ -56,16 +57,40 @@ function initializeScene() {
 		renderer.render(scene, camera);
 	});
 
-	geometries["sphere"] = new THREE.SphereGeometry(1, 12, 8);
+	geometries["sphere"] = new THREE.WireframeGeometry(new THREE.SphereGeometry(1, 16, 12));
 	geometries["box"] = new THREE.BoxGeometry(1, 1, 1);
 	geometries["cylinder"] = new THREE.CylinderGeometry(2, 2, 5, 32);
+	geometries["plane"] = new THREE.PlaneGeometry(1, 1);;
 
-	materials["sphere"] = new THREE.MeshStandardMaterial({ color: 0xff00ff });
+	materials["sphere"] = new THREE.LineBasicMaterial({ color: 0x00ffff });
 	materials["box"] = new THREE.MeshStandardMaterial({ color: 0xff00ff });
 	materials["cylinder"] = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+	materials["plane"] = new THREE.MeshStandardMaterial({ color: 0xffffff , side: THREE.DoubleSide });
+
+
+	stats.showPanel(1);
+	document.getElementById("info").appendChild(stats.dom);
+	stats.dom.style = "cursor: pointer; opacity: 0.9; z-index: 10000;";
+
+	window.addEventListener('resize', onWindowResize, false);
 
 	// by default add spheres
 	populate(0);
+
+	canvas.addEventListener('click', function() {
+		var b = objects[1].body;
+		let pos = b.getPosition();
+
+		let forcePos = pos.add(new LUCID.Vec3(0, 5, 0));
+		b.applyForce(new LUCID.Vec3(100, 0, 0), forcePos);
+		console.log("click called: ", b.getPosition(), forcePos, b.invModelInertia);
+	}, false);
+}
+
+function onWindowResize() {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 
@@ -75,9 +100,9 @@ function populate(type) {
 
 	var x, y, z, w, h, d;
 
-	for (let i = 0; i < 100; i++) {
-		x = -25 + Math.random()*50;
-		z = -25 + Math.random()*50;
+	for (let i = 0; i < 1; i++) {
+		x = -5 + Math.random()*10;
+		z = -5 + Math.random()*10;
 		y = 3 + Math.random()*20;
 		w = 10 + Math.random()*10;
 		h = 10 + Math.random()*10;
@@ -86,7 +111,7 @@ function populate(type) {
 		var mesh;
 
 		if(type === 0){
-			var body = world.addRigidbody({ type: LUCID.BODY_DYNAMIC, shape: LUCID.SHAPE_SPHERE, position: [x, y, z] });
+			var body = world.addRigidbody({ type: LUCID.BODY_DYNAMIC, shape: LUCID.SHAPE_SPHERE, position: [x, y, z], scale: [5, 5, 5] });
 			mesh = new SceneObject(geometries.sphere, materials.sphere, body);
 		} else {
 			console.error("shape not handled: ", type);
@@ -101,8 +126,12 @@ function populate(type) {
 
 // update
 function update() {
+	stats.begin();
+
 	// update physics
 	world.step();
+
+	stats.end();
 
 	// re-render the scene
 	for (var i = 0; i < objects.length; i++) {
@@ -110,6 +139,11 @@ function update() {
 
 		object.position.copy(object.body.getPosition());
 		object.quaternion.copy(object.body.getQuaternion());
+
+		let scale = object.body.getScale();
+		if (!scale.equals(object.scale.x, object.scale.y, object.scale.z)) {
+			object.scale.copy(scale);
+		}
 	}
 	renderer.render(scene, camera);
 }
@@ -126,9 +160,6 @@ function clearScene() {
 
 function addGround() {
 	var size = 60;
-	var geometry = new THREE.PlaneGeometry(size, size);
-	var material = new THREE.MeshStandardMaterial({ color: 0xffffff , side: THREE.DoubleSide });
-
 	var body = world.addRigidbody({
 		type: LUCID.BODY_STATIC,
 		shape: LUCID.SHAPE_PLANE,
@@ -137,7 +168,7 @@ function addGround() {
 		rotation: [-Math.PI/2, 0, 0],
 		rotationOrder: "XYZ", // use the three.js default order
 	});
-	var mesh = new SceneObject(geometry, material, body);
+	var mesh = new SceneObject(geometries["plane"], materials["plane"], body);
 
 	objects.push(mesh);
 	scene.add(mesh);

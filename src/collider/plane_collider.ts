@@ -1,4 +1,4 @@
-import { Vec3 } from "../math/index";
+import { Mat33, Vec3 } from "../math/index";
 import { Collider } from "./collider";
 import { RigidBody } from "../core/rigidbody";
 
@@ -29,6 +29,11 @@ export class PlaneCollider extends Collider {
 
         // cache the Vec(n) . Vec(ro)
         this.d = this.normal.dot(this.point);
+    }
+
+    calculateMassInfo(mass: number, inertia: Mat33): void {
+        let inertiaValue = 1;
+		inertia.set(inertiaValue, 0, 0, 0, inertiaValue, 0, 0, 0, inertiaValue);
     }
 
     update(rigidbody: RigidBody) {

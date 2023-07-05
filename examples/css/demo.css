@@ -46,6 +46,6 @@ canvas {
     left: 10px;
     top: 70px;
     width: 20%;
-    height: 400px;
-    background-color: #40ff001f;
+    height: 300px;
+    /* background-color: #40ff001f; */
 }

@@ -47,14 +47,13 @@ export class World {
 		this.runImpulseSolver(collisions);
 		this.runPositionCorrectionSolver(collisions);
 
-		// calculate net force on body, right now it is just gravity
-		for (let i = 0; i < this.rigidbodies.length; i++) {
-			this.rigidbodies[i].applyForce(this.gravity);
-		}
-
-		// update velocity & position due to net force
 		for (let i = 0; i < this.rigidbodies.length; i++) {
 			const body = this.rigidbodies[i];
+
+			// calculate net force on body, right now it is just gravity
+			body.applyForce(this.gravity);
+
+			// move the body due to force or impulse during collision
 			body.move(this.timestep);
 
 			// reset force
@@ -170,7 +169,6 @@ export class World {
 
 			bodyB.applyImpulse(impulse);
 			bodyA.applyImpulse(impulse.negate());
-
 		}
 	}
 

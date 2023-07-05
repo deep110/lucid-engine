@@ -196,8 +196,13 @@ export class Vec3 {
 		return false;
 	}
 
-	equals(v: Vec3) {
-		return v.x === this.x && v.y === this.y && v.z === this.z;
+	equals(v: Vec3 | number, y?: number, z?: number) {
+		if (v instanceof Vec3) {
+			return v.x === this.x && v.y === this.y && v.z === this.z;
+		} else if (y !== undefined && z !== undefined) {
+			return v == this.x && y === this.y && z === this.z;
+		}
+		return false;
 	}
 
 	clone() {

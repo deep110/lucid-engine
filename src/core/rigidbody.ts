@@ -13,7 +13,7 @@ export type RigidbodyParams = {
 	restitution: number | undefined;
 	staticFriction: number | undefined;
 	dynamicFriction: number | undefined;
-	density: number | undefined;
+	mass: number | undefined;
 };
 
 
@@ -27,16 +27,14 @@ export class RigidBody {
 	scale: Vec3;
 
 	// kinematics
-	mass: number;
-	invMass: number;
-	invInertia: Mat33;
+	mass: number; invMass: number;
+	invInertia: Mat33; invModelInertia: Mat33;
 	netForce: Vec3;
 	netTorque: Vec3;
 	linearVelocity: Vec3;
 	angularVelocity: Vec3;
 
 	// material
-	density: number;
 	restitution: number;
 	staticFriction: number;
 	dynamicFriction: number;
@@ -63,16 +61,11 @@ export class RigidBody {
 		this.angularVelocity = new Vec3();
 
 		this.type = params.type || BODY_DYNAMIC;
-		this.mass = 1;
+		this.mass = params.mass || 1.0;
 		this.invMass = 1 / this.mass;
 		this.invInertia = new Mat33();
+		this.invModelInertia = new Mat33();
 
-		if (this.type == BODY_STATIC) {
-			this.mass = MathUtil.INF;
-			this.invMass = 0;
-		}
-
-		this.density = params.density || 1;
 		this.restitution = params.restitution || 0.8;
 		this.staticFriction = params.staticFriction || 0.3;
 		this.dynamicFriction = params.dynamicFriction || 0.1;
@@ -86,8 +79,14 @@ export class RigidBody {
 		return this.rotation;
 	}
 
+	getScale() {
+		return this.scale;
+	}
+
 	addCollider(collider: Collider) {
 		this.collider = collider;
+
+		this.calculateMassInfo();
 	}
 
 	canMove() {
@@ -95,6 +94,10 @@ export class RigidBody {
 	}
 
 	applyForce(force: Vec3, point?: Vec3) {
+		if (!this.canMove()) {
+			return;
+		}
+
 		this.netForce.addScaledVector(force, this.mass);
 
 		// if point is passed, then force might not be getting applied on COM
@@ -108,7 +111,7 @@ export class RigidBody {
 	applyImpulse(impulse: Vec3) {
 		if (this.canMove()) {
 			this.linearVelocity.addScaledVector(impulse, this.invMass);
-			// TODO also account for angular velocity
+			// TODO: also account for angular velocity
 		}
 	}
 
@@ -117,11 +120,31 @@ export class RigidBody {
 			return;
 		}
 
+		// integrate velocity
 		this.linearVelocity.addScaledVector(this.netForce, this.invMass * dt);
+		// this.angularVelocity = (body->m_invInertiaWorld * body->m_torque) * dt;
+
+		// integrate position
 		this.position.addScaledVector(this.linearVelocity, dt);
+		// this.rotation
 		// TODO: account for rotation
 
 		// update collider
-		if (this.collider) this.collider.update(this);
+		this.collider?.update(this);
+	}
+
+	private calculateMassInfo() {
+		if (this.type == BODY_STATIC) {
+			this.invMass = 0;
+			this.mass = 0;
+			this.invModelInertia.set(0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+			return;
+		}
+
+		// set the initial inertia of the model
+		this.collider?.calculateMassInfo(this.mass, this.invModelInertia);
+		// invert the inertia
+		this.invModelInertia.invert();
 	}
 }

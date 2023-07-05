@@ -1,6 +1,6 @@
 import { MathUtil } from "./utils";
 
-class Quaternion {
+export class Quaternion {
 	x: number;
 	y: number;
 	z: number;
@@ -147,5 +147,3 @@ class Quaternion {
 		return this;
 	}
 }
-
-export { Quaternion };
