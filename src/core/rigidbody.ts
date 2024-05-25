@@ -1,5 +1,5 @@
 import { MathUtil, Vec3, Quaternion, Mat33 } from "../math/index";
-import { BODY_DYNAMIC, BODY_STATIC } from "../constants";
+import { BODY_DYNAMIC, BODY_STATIC, ZERO_THRESHOLD } from "../constants";
 import { Collider } from "../collider/index";
 
 
@@ -28,7 +28,7 @@ export class RigidBody {
 
 	// kinematics
 	mass: number; invMass: number;
-	invInertia: Mat33; invModelInertia: Mat33;
+	invInertia: Mat33;
 	netForce: Vec3;
 	netTorque: Vec3;
 	linearVelocity: Vec3;
@@ -64,7 +64,6 @@ export class RigidBody {
 		this.mass = params.mass || 1.0;
 		this.invMass = 1 / this.mass;
 		this.invInertia = new Mat33();
-		this.invModelInertia = new Mat33();
 
 		this.restitution = params.restitution || 0.8;
 		this.staticFriction = params.staticFriction || 0.3;
@@ -111,7 +110,8 @@ export class RigidBody {
 	applyImpulse(impulse: Vec3) {
 		if (this.canMove()) {
 			this.linearVelocity.addScaledVector(impulse, this.invMass);
-			// TODO: also account for angular velocity
+			// this.angularVelocity.iadd(this.invInertia.multiplyVector(impulse));
+			// console.log("Im: ",this.invInertia.multiplyVector(impulse));
 		}
 	}
 
@@ -121,13 +121,21 @@ export class RigidBody {
 		}
 
 		// integrate velocity
+		// F = m dv / dt
 		this.linearVelocity.addScaledVector(this.netForce, this.invMass * dt);
-		// this.angularVelocity = (body->m_invInertiaWorld * body->m_torque) * dt;
+		this.angularVelocity.addScaledVector(this.invInertia.multiplyVector(this.netTorque), dt);
 
-		// integrate position
+		// TODO: add linear and angular damping because of air friction
+		this.angularVelocity.iscale(0.9);
+
+		// integrate position and rotation
 		this.position.addScaledVector(this.linearVelocity, dt);
-		// this.rotation
-		// TODO: account for rotation
+		const halfAngle = this.angularVelocity.length() * 0.5;
+		if (halfAngle > ZERO_THRESHOLD) {
+			const rotationAxis = this.angularVelocity.clone().normalize();
+			this.rotation.imultiply(new Quaternion().fromAxisAngle(rotationAxis, halfAngle));
+			this.rotation.normalize();
+		}
 
 		// update collider
 		this.collider?.update(this);
@@ -137,14 +145,14 @@ export class RigidBody {
 		if (this.type == BODY_STATIC) {
 			this.invMass = 0;
 			this.mass = 0;
-			this.invModelInertia.set(0, 0, 0, 0, 0, 0, 0, 0, 0);
+			this.invInertia.set(0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 			return;
 		}
 
 		// set the initial inertia of the model
-		this.collider?.calculateMassInfo(this.mass, this.invModelInertia);
+		this.collider?.calculateMassInfo(this.mass, this.invInertia);
 		// invert the inertia
-		this.invModelInertia.invert();
+		this.invInertia.invert();
 	}
 }

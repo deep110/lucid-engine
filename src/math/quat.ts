@@ -1,4 +1,5 @@
 import { MathUtil } from "./utils";
+import { Vec3 } from "./vec3";
 
 export class Quaternion {
 	x: number;
@@ -89,6 +90,24 @@ export class Quaternion {
 		return this;
 	}
 
+	multiplyVector(v: Vec3) {
+		let result = new Vec3();
+		// v' = q^−1 vq
+	
+		// calculate quat * vector
+		const ix = this.w * v.x + this.y * v.z - this.z * v.y;
+		const iy = this.w * v.y + this.z * v.x - this.x * v.z;
+		const iz = this.w * v.z + this.x * v.y - this.y * v.x;
+		const iw = -this.x * v.x - this.y * v.y - this.z * v.z;
+
+		// calculate result * inverse quat
+		result.x = ix * this.w + iw * -this.x + iy * -this.z - iz * -this.y;
+		result.y = iy * this.w + iw * -this.y + iz * -this.x - ix * -this.z;
+		result.z = iz * this.w + iw * -this.z + ix * -this.y - iy * -this.x;
+
+		return result;
+	}
+
 	fromEuler(rotation: number[], order: string) {
 		const c1 = MathUtil.cos(rotation[0] / 2);
 		const c2 = MathUtil.cos(rotation[1] / 2);
@@ -144,6 +163,18 @@ export class Quaternion {
 			default:
 				console.warn('LUCID.Quaternion: .fromEuler() encountered an unknown order: ' + order);
 		}
+		return this;
+	}
+
+	fromAxisAngle(axis: Vec3, angle: number) {
+		const halfAngle = angle * 0.5;
+		const sinHalfAngle = Math.sin(halfAngle);
+
+		this.x = axis.x * sinHalfAngle;
+		this.y = axis.y * sinHalfAngle;
+		this.z = axis.z * sinHalfAngle;
+		this.w = Math.cos(halfAngle);
+
 		return this;
 	}
 }

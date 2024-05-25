@@ -23,9 +23,8 @@ export class PlaneCollider extends Collider {
         this.normal = new Vec3(0, 0, 1);
         this.point = rigidbody.position.clone();
 
-        // for now set the normal
-        // this.normal.set(0, 1, 0);
-        this.normal.rotate(rigidbody.rotation);
+        // rotate the normal to rigidbody's rotation
+        this.normal = rigidbody.rotation.multiplyVector(this.normal);
 
         // cache the Vec(n) . Vec(ro)
         this.d = this.normal.dot(this.point);

@@ -16,9 +16,10 @@ export class SphereCollider extends Collider {
     }
 
     calculateMassInfo(mass: number, inertia: Mat33): void {
+        // moment of inertia of a sphere = 2 / 5 MR^2
         let inertiaValue = mass * this.radius * this.radius * 0.4;
 
-		inertia.set(inertiaValue, 0, 0, 0, inertiaValue, 0, 0, 0, inertiaValue);
+		inertia.diagonal(inertiaValue, inertiaValue, inertiaValue);
     }
 
     update(rigidbody: RigidBody): void {

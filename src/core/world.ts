@@ -16,7 +16,7 @@ export class World {
 
 	gravity: Vec3;
 	rigidbodies: RigidBody[];
-	detector: any;
+	collision_detector: any;
 
 	constructor(params: any) {
 		if (!(params instanceof Object)) params = {};
@@ -33,10 +33,10 @@ export class World {
 
 		this.rigidbodies = [];
 
-		this.detector = [{}, {}, {}, {}, {}];
-		this.detector[SHAPE_SPHERE][SHAPE_SPHERE] = new SphereSphereCollisionDetector();
-		this.detector[SHAPE_SPHERE][SHAPE_PLANE] = new SpherePlaneCollisionDetector();
-		this.detector[SHAPE_PLANE][SHAPE_SPHERE] = new SpherePlaneCollisionDetector(true);
+		this.collision_detector = [{}, {}, {}, {}, {}];
+		this.collision_detector[SHAPE_SPHERE][SHAPE_SPHERE] = new SphereSphereCollisionDetector();
+		this.collision_detector[SHAPE_SPHERE][SHAPE_PLANE] = new SpherePlaneCollisionDetector();
+		this.collision_detector[SHAPE_PLANE][SHAPE_SPHERE] = new SpherePlaneCollisionDetector(true);
 	}
 
 	step() {
@@ -101,7 +101,7 @@ export class World {
 				const bodyB = this.rigidbodies[j];
 
 				if (bodyA.collider && bodyB.collider) {
-					const detector = this.detector[bodyA.collider.shape][bodyB.collider.shape];
+					const detector = this.collision_detector[bodyA.collider.shape][bodyB.collider.shape];
 					const manifold = new Manifold(bodyA, bodyB);
 	
 					detector.detectCollision(bodyA.collider, bodyB.collider, manifold);

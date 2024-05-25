@@ -1,3 +1,5 @@
+import { Vec3 } from "./vec3";
+
 export class Mat33 {
     elements: number[];
 
@@ -16,6 +18,12 @@ export class Mat33 {
         te[6] = e20; te[7] = e21; te[8] = e22;
 
         return this;
+    }
+
+    diagonal(a: number, b: number, c: number) {
+        this.elements[0] = a;
+        this.elements[4] = b;
+        this.elements[8] = c;
     }
 
     invert() {
@@ -58,6 +66,14 @@ export class Mat33 {
             + te[2] * te[3] * te[7] - te[2] * te[4] * te[6];
     }
 
+    multiplyVector(v: Vec3) {
+        const result = new Vec3();
+        result.x = v.x * this.elements[0] + v.y * this.elements[3] + v.z * this.elements[6];
+        result.y = v.x * this.elements[1] + v.y * this.elements[4] + v.z * this.elements[7];
+        result.z = v.x * this.elements[2] + v.y * this.elements[5] + v.z * this.elements[8];
+        return result;
+    }
+
     fromArray(array: number[], offset?: number) {
         if (offset === undefined) offset = 0;
 
@@ -66,5 +82,4 @@ export class Mat33 {
         }
         return this;
     }
-
 }

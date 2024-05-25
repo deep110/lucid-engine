@@ -1,5 +1,5 @@
-import { Quaternion } from "./quat";
 import { MathUtil } from "./utils";
+import { ZERO_THRESHOLD } from "../constants";
 
 export class Vec3 {
 	x: number;
@@ -137,7 +137,7 @@ export class Vec3 {
 
 	safeNormalize() {
 		let len = this.length();
-		if (len > 0.0001) {
+		if (len > ZERO_THRESHOLD) {
 			this.iscale(1 / len);
 		}
 		return this;
@@ -156,39 +156,6 @@ export class Vec3 {
 		this.z *= -1;
 		return this;
 	}
-
-	rotate(q: Quaternion) {
-		// v' = q^−1 vq
-
-		// calculate quat * vector
-		const ix = q.w * this.x + q.y * this.z - q.z * this.y;
-		const iy = q.w * this.y + q.z * this.x - q.x * this.z;
-		const iz = q.w * this.z + q.x * this.y - q.y * this.x;
-		const iw = -q.x * this.x - q.y * this.y - q.z * this.z;
-
-		// calculate result * inverse quat
-		this.x = ix * q.w + iw * -q.x + iy * -q.z - iz * -q.y;
-		this.y = iy * q.w + iw * -q.y + iz * -q.x - ix * -q.z;
-		this.z = iz * q.w + iw * -q.z + ix * -q.y - iy * -q.x;
-	}
-
-	// applyMatrix3(m, transpose) {
-
-	// 	const x = this.x, y = this.y, z = this.z;
-	// 	const e = m.elements;
-
-	// 	if (transpose) {
-	// 		this.x = e[0] * x + e[1] * y + e[2] * z;
-	// 		this.y = e[3] * x + e[4] * y + e[5] * z;
-	// 		this.z = e[6] * x + e[7] * y + e[8] * z;
-	// 	} else {
-	// 		this.x = e[0] * x + e[3] * y + e[6] * z;
-	// 		this.y = e[1] * x + e[4] * y + e[7] * z;
-	// 		this.z = e[2] * x + e[5] * y + e[8] * z;
-	// 	}
-
-	// 	return this;
-	// }
 
 	isZero() {
 		if (this.x !== 0 || this.y !== 0 || this.z !== 0) return true;
