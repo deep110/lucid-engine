@@ -68,7 +68,7 @@ export class Quaternion {
     }
 
 	multiply(q: Quaternion) {
-		let r = new Quaternion();
+		const r = new Quaternion();
 		return r.multiplyQuaternions(this, q);
 	}
 
@@ -90,22 +90,21 @@ export class Quaternion {
 		return this;
 	}
 
-	multiplyVector(v: Vec3) {
-		let result = new Vec3();
-		// v' = q^−1 vq
-	
+	multiplyVector(out: Vec3, v: Vec3) {
+		// r = q . v . q^-1
+
 		// calculate quat * vector
-		const ix = this.w * v.x + this.y * v.z - this.z * v.y;
-		const iy = this.w * v.y + this.z * v.x - this.x * v.z;
-		const iz = this.w * v.z + this.x * v.y - this.y * v.x;
-		const iw = -this.x * v.x - this.y * v.y - this.z * v.z;
+		const ix = this.w * v.x - this.y * v.z + this.z * v.y;
+		const iy = this.w * v.y - this.z * v.x + this.x * v.z;
+		const iz = this.w * v.z - this.x * v.y + this.y * v.x;
+		const iw = this.x * v.x + this.y * v.y + this.z * v.z;
 
 		// calculate result * inverse quat
-		result.x = ix * this.w + iw * -this.x + iy * -this.z - iz * -this.y;
-		result.y = iy * this.w + iw * -this.y + iz * -this.x - ix * -this.z;
-		result.z = iz * this.w + iw * -this.z + ix * -this.y - iy * -this.x;
+		out.x = ix * this.w + iw * this.x + iy * this.z - iz * this.y;
+		out.y = iy * this.w + iw * this.y + iz * this.x - ix * this.z;
+		out.z = iz * this.w + iw * this.z + ix * this.y - iy * this.x;
 
-		return result;
+		return out;
 	}
 
 	fromEuler(rotation: number[], order: string) {

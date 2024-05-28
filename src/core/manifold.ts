@@ -14,29 +14,18 @@ export class Manifold {
         this.bodyA = bodyA;
         this.bodyB = bodyB;
 
-        // Furthest point of A into B
-        this.A = undefined;
-
-        // Furthest point of B into A
-        this.B = undefined;
-
-        // B - A normalized
+        // collision direction
         this.collisionNormal = new Vec3();
-
-        // Length of B - A
         this.penetrationDepth = 0;
 
         this.hasCollision = false;
     }
 
-    update(A: Vec3, B: Vec3) {
-        this.A = A;
-        this.B = B;
+    update(collisionNormal: Vec3, penetrationDepth: number) {
+        this.collisionNormal.copy(collisionNormal);
+        this.penetrationDepth = penetrationDepth;
 
-        this.collisionNormal.copy(A).isub(B);
-
-        this.penetrationDepth = this.collisionNormal.length();
         // normalize the collision normal
-        this.collisionNormal.iscale(1 / this.penetrationDepth);
+        this.collisionNormal.normalize();
     }
 }

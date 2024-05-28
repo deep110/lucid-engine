@@ -5,11 +5,10 @@ export const BODY_KINEMATIC = 2;
 
 // Shape type
 export const SHAPE_SPHERE = 0;
-export const SHAPE_PLANE = 1;
-export const SHAPE_BOX = 2;
-export const SHAPE_CYLINDER = 3;
-export const SHAPE_CAPSULE = 4;
-export const SHAPE_POLYGON = 5;
+export const SHAPE_BOX = 1;
+export const SHAPE_CYLINDER = 2;
+export const SHAPE_CAPSULE = 3;
+export const SHAPE_POLYGON = 4;
 
 
 // AABB approximation

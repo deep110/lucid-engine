@@ -20,6 +20,7 @@ export type RigidbodyParams = {
 export class RigidBody {
 	id: string;
 	type: number;
+	shape: number;
 
 	// transform properties
 	position: Vec3;
@@ -44,13 +45,14 @@ export class RigidBody {
 
 	constructor(params: RigidbodyParams) {
 		this.id = MathUtil.generateUUID();
+		this.shape = params.shape;
 		this.position = new Vec3();
 		this.rotation = new Quaternion();
 		this.scale = new Vec3(1, 1, 1);
 
 		if (params.position !== undefined) this.position.fromArray(params.position);
 		if (params.rotation !== undefined) {
-			let order = params.rotationOrder || "XYZ";
+			const order = params.rotationOrder || "XYZ";
 			this.rotation.fromEuler(params.rotation, order);
 		}
 		if (params.scale !== undefined) this.scale.fromArray(params.scale);
@@ -70,15 +72,15 @@ export class RigidBody {
 		this.dynamicFriction = params.dynamicFriction || 0.1;
 	}
 
-	getPosition() {
+	getPosition(): Vec3 {
 		return this.position;
 	}
 
-	getQuaternion() {
+	getRotation(): Quaternion {
 		return this.rotation;
 	}
 
-	getScale() {
+	getScale(): Vec3 {
 		return this.scale;
 	}
 
@@ -102,20 +104,24 @@ export class RigidBody {
 		// if point is passed, then force might not be getting applied on COM
 		// this will also give rise to `Torque = F x r`
 		if (point) {
-			let r = point.sub(this.position);
+			const r = point.sub(this.position);
 			this.netTorque.iadd(r.cross(force));
 		}
 	}
 
-	applyImpulse(impulse: Vec3) {
+	applyImpulse(impulse: Vec3, point?: Vec3) {
 		if (this.canMove()) {
 			this.linearVelocity.addScaledVector(impulse, this.invMass);
 			// this.angularVelocity.iadd(this.invInertia.multiplyVector(impulse));
 			// console.log("Im: ",this.invInertia.multiplyVector(impulse));
+
+			if (point) {
+
+			}
 		}
 	}
 
-	move(dt: number) {
+	move(dt: number, linear_damping: number, angular_damping: number) {
 		if (!this.canMove()) {
 			return;
 		}
@@ -125,20 +131,35 @@ export class RigidBody {
 		this.linearVelocity.addScaledVector(this.netForce, this.invMass * dt);
 		this.angularVelocity.addScaledVector(this.invInertia.multiplyVector(this.netTorque), dt);
 
-		// TODO: add linear and angular damping because of air friction
-		this.angularVelocity.iscale(0.9);
+		// apply air friction damping
+		this.linearVelocity.iscale(linear_damping);
+		this.angularVelocity.iscale(angular_damping);
 
-		// integrate position and rotation
+		// integrate velocity to get updated position
 		this.position.addScaledVector(this.linearVelocity, dt);
+
+		// integrate angular velocity to get rotation
+		//
+		// not so straight forward since angular velocity is Vec3 and rotation is Quaternion
+		// https://gafferongames.com/post/physics_in_3d/
 		const halfAngle = this.angularVelocity.length() * 0.5;
 		if (halfAngle > ZERO_THRESHOLD) {
+			// convert angular velocity to Quaternion
 			const rotationAxis = this.angularVelocity.clone().normalize();
-			this.rotation.imultiply(new Quaternion().fromAxisAngle(rotationAxis, halfAngle));
+			const angularVelocityQuat = new Quaternion().fromAxisAngle(rotationAxis, halfAngle);
+
+			// integrate rotation
+			this.rotation.imultiply(angularVelocityQuat);
 			this.rotation.normalize();
 		}
 
 		// update collider
 		this.collider?.update(this);
+	}
+
+	reset_force() {
+		this.netForce.reset();
+		this.netTorque.reset();
 	}
 
 	private calculateMassInfo() {

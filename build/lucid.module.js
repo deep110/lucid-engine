@@ -4,14 +4,14 @@ const BODY_STATIC = 1;
 const BODY_KINEMATIC = 2;
 // Shape type
 const SHAPE_SPHERE = 0;
-const SHAPE_PLANE = 1;
-const SHAPE_BOX = 2;
-const SHAPE_CYLINDER = 3;
-const SHAPE_CAPSULE = 4;
-const SHAPE_POLYGON = 5;
+const SHAPE_BOX = 1;
+const SHAPE_CYLINDER = 2;
+const SHAPE_CAPSULE = 3;
+const SHAPE_POLYGON = 4;
 // AABB approximation
 const AABB_PROX = 0.005;
 const PENETRATION_ALLOWANCE = 0.01;
+const ZERO_THRESHOLD = 0.000001;
 
 const MathUtil = {
     abs: Math.abs,
@@ -163,14 +163,13 @@ class Vec3 {
         return MathUtil.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
     }
     normalize() {
-        const invLength = 1 / this.length();
-        return this.iscale(invLength);
-    }
-    safeNormalize() {
-        let len = this.length();
-        if (len > 0.0001) {
-            this.iscale(1 / len);
+        let len = this.x * this.x + this.y * this.y + this.z * this.z;
+        if (len > ZERO_THRESHOLD) {
+            len = 1 / MathUtil.sqrt(len);
         }
+        this.x *= len;
+        this.y *= len;
+        this.z *= len;
         return this;
     }
     copy(v) {
@@ -185,32 +184,6 @@ class Vec3 {
         this.z *= -1;
         return this;
     }
-    rotate(q) {
-        // v' = q^−1 vq
-        // calculate quat * vector
-        const ix = q.w * this.x + q.y * this.z - q.z * this.y;
-        const iy = q.w * this.y + q.z * this.x - q.x * this.z;
-        const iz = q.w * this.z + q.x * this.y - q.y * this.x;
-        const iw = -q.x * this.x - q.y * this.y - q.z * this.z;
-        // calculate result * inverse quat
-        this.x = ix * q.w + iw * -q.x + iy * -q.z - iz * -q.y;
-        this.y = iy * q.w + iw * -q.y + iz * -q.x - ix * -q.z;
-        this.z = iz * q.w + iw * -q.z + ix * -q.y - iy * -q.x;
-    }
-    // applyMatrix3(m, transpose) {
-    // 	const x = this.x, y = this.y, z = this.z;
-    // 	const e = m.elements;
-    // 	if (transpose) {
-    // 		this.x = e[0] * x + e[1] * y + e[2] * z;
-    // 		this.y = e[3] * x + e[4] * y + e[5] * z;
-    // 		this.z = e[6] * x + e[7] * y + e[8] * z;
-    // 	} else {
-    // 		this.x = e[0] * x + e[3] * y + e[6] * z;
-    // 		this.y = e[1] * x + e[4] * y + e[7] * z;
-    // 		this.z = e[2] * x + e[5] * y + e[8] * z;
-    // 	}
-    // 	return this;
-    // }
     isZero() {
         if (this.x !== 0 || this.y !== 0 || this.z !== 0)
             return true;
@@ -307,7 +280,7 @@ class Quaternion {
         return this.conjugate().normalize();
     }
     multiply(q) {
-        let r = new Quaternion();
+        const r = new Quaternion();
         return r.multiplyQuaternions(this, q);
     }
     imultiply(q) {
@@ -322,6 +295,19 @@ class Quaternion {
         this.z = qaz * qbw + qaw * qbz + qax * qby - qay * qbx;
         this.w = qaw * qbw - qax * qbx - qay * qby - qaz * qbz;
         return this;
+    }
+    multiplyVector(out, v) {
+        // r = q . v . q^-1
+        // calculate quat * vector
+        const ix = this.w * v.x - this.y * v.z + this.z * v.y;
+        const iy = this.w * v.y - this.z * v.x + this.x * v.z;
+        const iz = this.w * v.z - this.x * v.y + this.y * v.x;
+        const iw = this.x * v.x + this.y * v.y + this.z * v.z;
+        // calculate result * inverse quat
+        out.x = ix * this.w + iw * this.x + iy * this.z - iz * this.y;
+        out.y = iy * this.w + iw * this.y + iz * this.x - ix * this.z;
+        out.z = iz * this.w + iw * this.z + ix * this.y - iy * this.x;
+        return out;
     }
     fromEuler(rotation, order) {
         const c1 = MathUtil.cos(rotation[0] / 2);
@@ -372,6 +358,15 @@ class Quaternion {
         }
         return this;
     }
+    fromAxisAngle(axis, angle) {
+        const halfAngle = angle * 0.5;
+        const sinHalfAngle = Math.sin(halfAngle);
+        this.x = axis.x * sinHalfAngle;
+        this.y = axis.y * sinHalfAngle;
+        this.z = axis.z * sinHalfAngle;
+        this.w = Math.cos(halfAngle);
+        return this;
+    }
 }
 
 class Mat33 {
@@ -379,7 +374,7 @@ class Mat33 {
         this.elements = [1, 0, 0, 0, 1, 0, 0, 0, 1];
     }
     set(e00, e01, e02, e10, e11, e12, e20, e21, e22) {
-        var te = this.elements;
+        const te = this.elements;
         te[0] = e00;
         te[1] = e01;
         te[2] = e02;
@@ -391,8 +386,13 @@ class Mat33 {
         te[8] = e22;
         return this;
     }
+    diagonal(a, b, c) {
+        this.elements[0] = a;
+        this.elements[4] = b;
+        this.elements[8] = c;
+    }
     invert() {
-        var tm = this.elements;
+        const tm = this.elements;
         let a00 = tm[0], a10 = tm[3], a20 = tm[6], a01 = tm[1], a11 = tm[4], a21 = tm[7], a02 = tm[2], a12 = tm[5], a22 = tm[8], b01 = a22 * a11 - a12 * a21, b11 = -a22 * a10 + a12 * a20, b21 = a21 * a10 - a11 * a20, det = a00 * b01 + a01 * b11 + a02 * b21;
         if (det === 0) {
             return this.identity();
@@ -414,14 +414,46 @@ class Mat33 {
         return this;
     }
     determinant() {
-        var te = this.elements;
+        const te = this.elements;
         return te[0] * te[4] * te[8] - te[0] * te[5] * te[7] - te[1] * te[3] * te[8] + te[1] * te[5] * te[6]
             + te[2] * te[3] * te[7] - te[2] * te[4] * te[6];
+    }
+    multiplyVector(v) {
+        const result = new Vec3();
+        result.x = v.x * this.elements[0] + v.y * this.elements[3] + v.z * this.elements[6];
+        result.y = v.x * this.elements[1] + v.y * this.elements[4] + v.z * this.elements[7];
+        result.z = v.x * this.elements[2] + v.y * this.elements[5] + v.z * this.elements[8];
+        return result;
+    }
+    fromQuat(q) {
+        const x2 = q.x + q.x;
+        const y2 = q.y + q.y;
+        const z2 = q.z + q.z;
+        const xx = q.x * x2;
+        const yx = q.y * x2;
+        const yy = q.y * y2;
+        const zx = q.z * x2;
+        const zy = q.z * y2;
+        const zz = q.z * z2;
+        const wx = q.w * x2;
+        const wy = q.w * y2;
+        const wz = q.w * z2;
+        const out = this.elements;
+        out[0] = 1 - yy - zz;
+        out[3] = yx - wz;
+        out[6] = zx + wy;
+        out[1] = yx + wz;
+        out[4] = 1 - xx - zz;
+        out[7] = zy - wx;
+        out[2] = zx - wy;
+        out[5] = zy + wx;
+        out[8] = 1 - xx - yy;
+        return this;
     }
     fromArray(array, offset) {
         if (offset === undefined)
             offset = 0;
-        for (var i = 0; i < 9; i++) {
+        for (let i = 0; i < 9; i++) {
             this.elements[i] = array[i + offset];
         }
         return this;
@@ -431,13 +463,14 @@ class Mat33 {
 class RigidBody {
     constructor(params) {
         this.id = MathUtil.generateUUID();
+        this.shape = params.shape;
         this.position = new Vec3();
         this.rotation = new Quaternion();
         this.scale = new Vec3(1, 1, 1);
         if (params.position !== undefined)
             this.position.fromArray(params.position);
         if (params.rotation !== undefined) {
-            let order = params.rotationOrder || "XYZ";
+            const order = params.rotationOrder || "XYZ";
             this.rotation.fromEuler(params.rotation, order);
         }
         if (params.scale !== undefined)
@@ -450,7 +483,6 @@ class RigidBody {
         this.mass = params.mass || 1.0;
         this.invMass = 1 / this.mass;
         this.invInertia = new Mat33();
-        this.invModelInertia = new Mat33();
         this.restitution = params.restitution || 0.8;
         this.staticFriction = params.staticFriction || 0.3;
         this.dynamicFriction = params.dynamicFriction || 0.1;
@@ -458,7 +490,7 @@ class RigidBody {
     getPosition() {
         return this.position;
     }
-    getQuaternion() {
+    getRotation() {
         return this.rotation;
     }
     getScale() {
@@ -479,67 +511,61 @@ class RigidBody {
         // if point is passed, then force might not be getting applied on COM
         // this will also give rise to `Torque = F x r`
         if (point) {
-            let r = point.sub(this.position);
+            const r = point.sub(this.position);
             this.netTorque.iadd(r.cross(force));
         }
     }
-    applyImpulse(impulse) {
+    applyImpulse(impulse, point) {
         if (this.canMove()) {
             this.linearVelocity.addScaledVector(impulse, this.invMass);
-            // TODO: also account for angular velocity
         }
     }
-    move(dt) {
+    move(dt, linear_damping, angular_damping) {
         var _a;
         if (!this.canMove()) {
             return;
         }
         // integrate velocity
+        // F = m dv / dt
         this.linearVelocity.addScaledVector(this.netForce, this.invMass * dt);
-        // this.angularVelocity = (body->m_invInertiaWorld * body->m_torque) * dt;
-        // integrate position
+        this.angularVelocity.addScaledVector(this.invInertia.multiplyVector(this.netTorque), dt);
+        // apply air friction damping
+        this.linearVelocity.iscale(linear_damping);
+        this.angularVelocity.iscale(angular_damping);
+        // integrate velocity to get updated position
         this.position.addScaledVector(this.linearVelocity, dt);
-        // this.rotation
-        // TODO: account for rotation
+        // integrate angular velocity to get rotation
+        //
+        // not so straight forward since angular velocity is Vec3 and rotation is Quaternion
+        // https://gafferongames.com/post/physics_in_3d/
+        const halfAngle = this.angularVelocity.length() * 0.5;
+        if (halfAngle > ZERO_THRESHOLD) {
+            // convert angular velocity to Quaternion
+            const rotationAxis = this.angularVelocity.clone().normalize();
+            const angularVelocityQuat = new Quaternion().fromAxisAngle(rotationAxis, halfAngle);
+            // integrate rotation
+            this.rotation.imultiply(angularVelocityQuat);
+            this.rotation.normalize();
+        }
         // update collider
         (_a = this.collider) === null || _a === void 0 ? void 0 : _a.update(this);
+    }
+    reset_force() {
+        this.netForce.reset();
+        this.netTorque.reset();
     }
     calculateMassInfo() {
         var _a;
         if (this.type == BODY_STATIC) {
             this.invMass = 0;
             this.mass = 0;
-            this.invModelInertia.set(0, 0, 0, 0, 0, 0, 0, 0, 0);
+            this.invInertia.set(0, 0, 0, 0, 0, 0, 0, 0, 0);
             return;
         }
         // set the initial inertia of the model
-        (_a = this.collider) === null || _a === void 0 ? void 0 : _a.calculateMassInfo(this.mass, this.invModelInertia);
+        (_a = this.collider) === null || _a === void 0 ? void 0 : _a.calculateMassInfo(this.mass, this.invInertia);
         // invert the inertia
-        this.invModelInertia.invert();
-    }
-}
-
-class Manifold {
-    constructor(bodyA, bodyB) {
-        this.bodyA = bodyA;
-        this.bodyB = bodyB;
-        // Furthest point of A into B
-        this.A = undefined;
-        // Furthest point of B into A
-        this.B = undefined;
-        // B - A normalized
-        this.collisionNormal = new Vec3();
-        // Length of B - A
-        this.penetrationDepth = 0;
-        this.hasCollision = false;
-    }
-    update(A, B) {
-        this.A = A;
-        this.B = B;
-        this.collisionNormal.copy(A).isub(B);
-        this.penetrationDepth = this.collisionNormal.length();
-        // normalize the collision normal
-        this.collisionNormal.iscale(1 / this.penetrationDepth);
+        this.invInertia.invert();
     }
 }
 
@@ -555,10 +581,20 @@ class Collider {
     }
 }
 
-// import { Vec3 } from "../math/index";
 class BoxCollider extends Collider {
     constructor(shapeType, rigidbody) {
         super(shapeType, rigidbody);
+        this.center = rigidbody.position.clone();
+        this.half_extents = rigidbody.scale.scale(0.5);
+        this.orientation = rigidbody.rotation.clone();
+    }
+    calculateMassInfo(mass, inertia) {
+        const p = mass / 3;
+        inertia.diagonal(p * (this.half_extents.y * this.half_extents.y + this.half_extents.z * this.half_extents.z), p * (this.half_extents.x * this.half_extents.x + this.half_extents.z * this.half_extents.z), p * (this.half_extents.x * this.half_extents.x + this.half_extents.y * this.half_extents.y));
+    }
+    update(rigidbody) {
+        this.center.copy(rigidbody.position);
+        this.orientation.copy(rigidbody.rotation);
     }
 }
 
@@ -566,85 +602,134 @@ class SphereCollider extends Collider {
     constructor(shapeType, rigidbody) {
         super(shapeType, rigidbody);
         // set radius
-        this.radius = rigidbody.scale.x;
+        this.radius = rigidbody.scale.x / 2;
+        this.radiusSq = this.radius * this.radius;
         // set center
         this.center = rigidbody.position.clone();
     }
     calculateMassInfo(mass, inertia) {
-        let inertiaValue = mass * this.radius * this.radius * 0.4;
-        inertia.set(inertiaValue, 0, 0, 0, inertiaValue, 0, 0, 0, inertiaValue);
+        // moment of inertia of a sphere = 2 / 5 MR^2
+        const inertiaValue = mass * this.radius * this.radius * 0.4;
+        inertia.diagonal(inertiaValue, inertiaValue, inertiaValue);
     }
     update(rigidbody) {
         this.center.copy(rigidbody.position);
     }
 }
 
-class PlaneCollider extends Collider {
-    constructor(shapeType, rigidbody) {
-        super(shapeType, rigidbody);
-        // TODO: account for rotation
-        this.dims = rigidbody.scale.clone();
-        // representing plane in vector form:
-        // 
-        // Vec(n) . [ Vec(r) - Vec(ro) ] = 0
-        // where,
-        //     ro is any point on the plane
-        //     n is normal vector perpendicular to plane
-        this.normal = new Vec3(0, 0, 1);
-        this.point = rigidbody.position.clone();
-        // for now set the normal
-        // this.normal.set(0, 1, 0);
-        this.normal.rotate(rigidbody.rotation);
-        // cache the Vec(n) . Vec(ro)
-        this.d = this.normal.dot(this.point);
-    }
-    calculateMassInfo(mass, inertia) {
-        let inertiaValue = 1;
-        inertia.set(inertiaValue, 0, 0, 0, inertiaValue, 0, 0, 0, inertiaValue);
-    }
-    update(rigidbody) {
-        // planes don't move or rotate
-    }
-}
-
-class SpherePlaneCollisionDetector {
-    constructor(flip = false) {
-        this.flip = flip;
-    }
+class BoxBoxCollisionDetector {
     detectCollision(colliderA, colliderB, manifold) {
-        const sphere = this.flip ? colliderB : colliderA;
-        const plane = this.flip ? colliderA : colliderB;
-        // TODO: add check for plane dimensions for finite planes
-        // find the signed distance of sphere's center from plane
-        const distance = sphere.center.dot(plane.normal) - plane.d;
-        if (MathUtil.abs(distance) < sphere.radius) {
-            manifold.hasCollision = true;
-            const B = sphere.center.clone().subScaledVector(plane.normal, distance);
-            const A = sphere.center.clone().subScaledVector(plane.normal, sphere.radius);
-            if (this.flip) {
-                manifold.update(B, A);
-            }
-            else {
-                manifold.update(A, B);
-            }
-        }
     }
 }
 
 class SphereSphereCollisionDetector {
+    constructor() {
+        this.distance = new Vec3();
+    }
     detectCollision(colliderA, colliderB, manifold) {
         const sphereA = colliderA;
         const sphereB = colliderB;
         // distance between their centers should be less than sum of radii
-        let rSum = sphereA.radius + sphereB.radius;
-        let dist = sphereB.center.sub(sphereA.center);
-        if (dist.lengthSq() < rSum * rSum) {
+        const rSum = sphereA.radius + sphereB.radius;
+        this.distance.copy(sphereB.center).isub(sphereA.center);
+        if (this.distance.lengthSq() < rSum * rSum) {
             manifold.hasCollision = true;
-            let normal = dist.normalize();
-            let A = sphereA.center.clone().addScaledVector(normal, sphereA.radius);
-            let B = sphereB.center.clone().addScaledVector(normal.negate(), sphereA.radius);
-            manifold.update(A, B);
+            manifold.update(this.distance, rSum - this.distance.length());
         }
+    }
+}
+
+class BoxSphereCollisionDetector {
+    constructor(flip = false) {
+        this.flip = flip;
+        this.sphCenter = new Vec3();
+        this.cuboidPoint = new Vec3();
+        this.normal = new Vec3();
+        this.boxOrientationConj = new Quaternion();
+    }
+    detectCollision(colliderA, colliderB, manifold) {
+        const box = this.flip ? colliderB : colliderA;
+        const sphere = this.flip ? colliderA : colliderB;
+        // transform sphere's center to box's local coordinate system
+        this.sphCenter.copy(sphere.center).isub(box.center);
+        if (box.orientation.w != 1.0) {
+            box.orientation.multiplyVector(this.sphCenter, this.sphCenter);
+        }
+        // Calculate the closest point on the cuboid to the sphere center
+        // It will be sphere's center if sphere's center is inside the cuboid
+        this.cuboidPoint.x = Math.max(-box.half_extents.x, Math.min(this.sphCenter.x, box.half_extents.x));
+        this.cuboidPoint.y = Math.max(-box.half_extents.y, Math.min(this.sphCenter.y, box.half_extents.y));
+        this.cuboidPoint.z = Math.max(-box.half_extents.z, Math.min(this.sphCenter.z, box.half_extents.z));
+        let distanceV = this.sphCenter.isub(this.cuboidPoint);
+        const distanceSq = distanceV.lengthSq();
+        if (distanceSq < sphere.radiusSq) {
+            manifold.hasCollision = true;
+            // handle special case when sphere's center is inside the box
+            if (distanceSq == 0) {
+                // we can take normal direction to be vector between two centers
+                this.normal.copy(sphere.center).isub(box.center);
+            }
+            else {
+                // inverse transform this cuboid point
+                if (box.orientation.w != 1.0) {
+                    this.boxOrientationConj.copy(box.orientation).conjugate().multiplyVector(this.cuboidPoint, this.cuboidPoint);
+                }
+                this.cuboidPoint.iadd(box.center);
+                this.normal.copy(sphere.center).isub(this.cuboidPoint);
+            }
+            if (this.flip) {
+                manifold.update(this.normal.iscale(-1), sphere.radius - Math.sqrt(distanceSq));
+            }
+            else {
+                manifold.update(this.normal, sphere.radius - Math.sqrt(distanceSq));
+            }
+        }
+    }
+}
+
+class Manifold {
+    constructor(bodyA, bodyB) {
+        this.bodyA = bodyA;
+        this.bodyB = bodyB;
+        // collision direction
+        this.collisionNormal = new Vec3();
+        this.penetrationDepth = 0;
+        this.hasCollision = false;
+    }
+    update(collisionNormal, penetrationDepth) {
+        this.collisionNormal.copy(collisionNormal);
+        this.penetrationDepth = penetrationDepth;
+        // normalize the collision normal
+        this.collisionNormal.normalize();
+    }
+}
+
+class NarrowPhaseSolver {
+    constructor() {
+        this.shape_matrix = [{}, {}, {}, {}, {}];
+        this.shape_matrix[SHAPE_SPHERE][SHAPE_SPHERE] = new SphereSphereCollisionDetector();
+        this.shape_matrix[SHAPE_SPHERE][SHAPE_BOX] = new BoxSphereCollisionDetector(true);
+        this.shape_matrix[SHAPE_BOX][SHAPE_SPHERE] = new BoxSphereCollisionDetector();
+        this.shape_matrix[SHAPE_BOX][SHAPE_BOX] = new BoxBoxCollisionDetector();
+    }
+    solve(rigidbodies) {
+        const numBodies = rigidbodies.length;
+        const collisions = [];
+        for (let i = 0; i < numBodies; i++) {
+            for (let j = i + 1; j < numBodies; j++) {
+                const bodyA = rigidbodies[i];
+                const bodyB = rigidbodies[j];
+                if (bodyA.collider && bodyB.collider) {
+                    const detector = this.shape_matrix[bodyA.collider.shape][bodyB.collider.shape];
+                    const manifold = new Manifold(bodyA, bodyB);
+                    detector.detectCollision(bodyA.collider, bodyB.collider, manifold);
+                    if (manifold.hasCollision) {
+                        collisions.push(manifold);
+                    }
+                }
+            }
+        }
+        return collisions;
     }
 }
 
@@ -654,21 +739,18 @@ class World {
             params = {};
         this.timestep = params.timestep || 1 / 60;
         this.iterations = params.iterations || 8;
-        this.scale = params.worldscale || 1;
-        this.invScale = 1 / this.scale;
         // set gravity
         this.gravity = new Vec3(0, -9.8, 0);
         if (params.gravity !== undefined)
             this.gravity.fromArray(params.gravity);
+        this.linear_damping = params.linear_damping || 1;
+        this.angular_damping = params.angular_damping || 0.9;
         this.rigidbodies = [];
-        this.detector = [{}, {}, {}, {}, {}];
-        this.detector[SHAPE_SPHERE][SHAPE_SPHERE] = new SphereSphereCollisionDetector();
-        this.detector[SHAPE_SPHERE][SHAPE_PLANE] = new SpherePlaneCollisionDetector();
-        this.detector[SHAPE_PLANE][SHAPE_SPHERE] = new SpherePlaneCollisionDetector(true);
+        this.narrow_phase_solver = new NarrowPhaseSolver();
     }
     step() {
         // find collisions using narrow phase
-        const collisions = this.runNarrowPhaseCollisionDetector();
+        const collisions = this.narrow_phase_solver.solve(this.rigidbodies);
         // solve collisions
         this.runImpulseSolver(collisions);
         this.runPositionCorrectionSolver(collisions);
@@ -677,10 +759,9 @@ class World {
             // calculate net force on body, right now it is just gravity
             body.applyForce(this.gravity);
             // move the body due to force or impulse during collision
-            body.move(this.timestep);
+            body.move(this.timestep, this.linear_damping, this.angular_damping);
             // reset force
-            body.netForce.reset();
-            body.netTorque.reset();
+            body.reset_force();
         }
     }
     setGravity(grArr) {
@@ -704,25 +785,6 @@ class World {
     }
     getNumRigidbodies() {
         return this.rigidbodies.length;
-    }
-    runNarrowPhaseCollisionDetector() {
-        const numBodies = this.rigidbodies.length;
-        const collisions = [];
-        for (let i = 0; i < numBodies; i++) {
-            for (let j = i + 1; j < numBodies; j++) {
-                const bodyA = this.rigidbodies[i];
-                const bodyB = this.rigidbodies[j];
-                if (bodyA.collider && bodyB.collider) {
-                    const detector = this.detector[bodyA.collider.shape][bodyB.collider.shape];
-                    const manifold = new Manifold(bodyA, bodyB);
-                    detector.detectCollision(bodyA.collider, bodyB.collider, manifold);
-                    if (manifold.hasCollision) {
-                        collisions.push(manifold);
-                    }
-                }
-            }
-        }
-        return collisions;
     }
     runImpulseSolver(collisions) {
         for (let i = 0; i < collisions.length; i++) {
@@ -748,7 +810,7 @@ class World {
             contactSpeed = relVelocity.dot(manifold.collisionNormal);
             // get direction of relative velocity perpendicular to collision normal
             const tangent = relVelocity.clone().subScaledVector(manifold.collisionNormal, contactSpeed);
-            tangent.safeNormalize();
+            tangent.normalize();
             let mu = MathUtil.sqrt(bodyA.staticFriction * bodyA.staticFriction + bodyB.staticFriction * bodyB.staticFriction);
             const frictionImpulseMag = -relVelocity.dot(tangent) / totalInvMass;
             // Coulomb's Law:  F <= μFn
@@ -777,7 +839,7 @@ class World {
             const manifold = collisions[i];
             const bodyA = manifold.bodyA;
             const bodyB = manifold.bodyB;
-            let correction = MathUtil.max(0, manifold.penetrationDepth - PENETRATION_ALLOWANCE) * 0.8
+            const correction = MathUtil.max(0, manifold.penetrationDepth - PENETRATION_ALLOWANCE) * 0.8
                 / (bodyA.invMass + bodyB.invMass);
             if (bodyA.canMove()) {
                 bodyA.position.subScaledVector(manifold.collisionNormal, bodyA.invMass * correction);
@@ -793,10 +855,8 @@ class World {
                 return new BoxCollider(SHAPE_BOX, body);
             case SHAPE_SPHERE:
                 return new SphereCollider(SHAPE_SPHERE, body);
-            case SHAPE_PLANE:
-                return new PlaneCollider(SHAPE_PLANE, body);
         }
     }
 }
 
-export { AABB_PROX, BODY_DYNAMIC, BODY_KINEMATIC, BODY_STATIC, Mat33, PENETRATION_ALLOWANCE, Quaternion, RigidBody, SHAPE_BOX, SHAPE_CAPSULE, SHAPE_CYLINDER, SHAPE_PLANE, SHAPE_POLYGON, SHAPE_SPHERE, Vec3, World };
+export { AABB_PROX, BODY_DYNAMIC, BODY_KINEMATIC, BODY_STATIC, Mat33, PENETRATION_ALLOWANCE, Quaternion, RigidBody, SHAPE_BOX, SHAPE_CAPSULE, SHAPE_CYLINDER, SHAPE_POLYGON, SHAPE_SPHERE, Vec3, World, ZERO_THRESHOLD };

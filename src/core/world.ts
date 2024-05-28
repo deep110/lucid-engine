@@ -1,22 +1,22 @@
-import { SHAPE_BOX, SHAPE_SPHERE, SHAPE_PLANE, PENETRATION_ALLOWANCE } from "../constants";
+import { SHAPE_BOX, SHAPE_SPHERE, PENETRATION_ALLOWANCE } from "../constants";
 import { MathUtil, Vec3 } from "../math/index";
 
 import { RigidBody, RigidbodyParams } from "./rigidbody";
 import { Manifold } from "./manifold";
-import { BoxCollider, SphereCollider, PlaneCollider } from "../collider/index";
+import { BoxCollider, SphereCollider } from "../collider/index";
 
-import { SpherePlaneCollisionDetector, SphereSphereCollisionDetector } from "../collision/narrowphase/index";
+import { NarrowPhaseSolver } from "../collision/narrowphase/index";
 
 
 export class World {
 	timestep: number;
 	iterations: number;
-	scale: number;
-	invScale: number;
-
 	gravity: Vec3;
+	linear_damping: number;
+	angular_damping: number;
+	
 	rigidbodies: RigidBody[];
-	collision_detector: any;
+	narrow_phase_solver: any;
 
 	constructor(params: any) {
 		if (!(params instanceof Object)) params = {};
@@ -24,24 +24,19 @@ export class World {
 		this.timestep = params.timestep || 1 / 60;
 		this.iterations = params.iterations || 8;
 
-		this.scale = params.worldscale || 1;
-		this.invScale = 1 / this.scale;
-
 		// set gravity
 		this.gravity = new Vec3(0, -9.8, 0);
 		if (params.gravity !== undefined) this.gravity.fromArray(params.gravity);
+		this.linear_damping = params.linear_damping || 1;
+		this.angular_damping = params.angular_damping || 0.9;
 
 		this.rigidbodies = [];
-
-		this.collision_detector = [{}, {}, {}, {}, {}];
-		this.collision_detector[SHAPE_SPHERE][SHAPE_SPHERE] = new SphereSphereCollisionDetector();
-		this.collision_detector[SHAPE_SPHERE][SHAPE_PLANE] = new SpherePlaneCollisionDetector();
-		this.collision_detector[SHAPE_PLANE][SHAPE_SPHERE] = new SpherePlaneCollisionDetector(true);
+		this.narrow_phase_solver = new NarrowPhaseSolver();
 	}
 
 	step() {
 		// find collisions using narrow phase
-		const collisions = this.runNarrowPhaseCollisionDetector();
+		const collisions = this.narrow_phase_solver.solve(this.rigidbodies);
 
 		// solve collisions
 		this.runImpulseSolver(collisions);
@@ -54,11 +49,10 @@ export class World {
 			body.applyForce(this.gravity);
 
 			// move the body due to force or impulse during collision
-			body.move(this.timestep);
+			body.move(this.timestep, this.linear_damping, this.angular_damping);
 
 			// reset force
-			body.netForce.reset();
-			body.netTorque.reset();
+			body.reset_force();
 		}
 	}
 
@@ -89,29 +83,6 @@ export class World {
 
 	getNumRigidbodies() {
 		return this.rigidbodies.length;
-	}
-
-	private runNarrowPhaseCollisionDetector() {
-		const numBodies = this.rigidbodies.length;
-		const collisions = [];
-
-		for (let i = 0; i < numBodies; i++) {
-			for (let j = i+1; j < numBodies; j++) {
-				const bodyA = this.rigidbodies[i];
-				const bodyB = this.rigidbodies[j];
-
-				if (bodyA.collider && bodyB.collider) {
-					const detector = this.collision_detector[bodyA.collider.shape][bodyB.collider.shape];
-					const manifold = new Manifold(bodyA, bodyB);
-	
-					detector.detectCollision(bodyA.collider, bodyB.collider, manifold);
-					if (manifold.hasCollision) {
-						collisions.push(manifold);
-					}
-				}
-			}
-		}
-		return collisions;
 	}
 
 	private runImpulseSolver(collisions: Manifold[]) {
@@ -148,7 +119,7 @@ export class World {
 
 			// get direction of relative velocity perpendicular to collision normal
 			const tangent = relVelocity.clone().subScaledVector(manifold.collisionNormal, contactSpeed);
-			tangent.safeNormalize();
+			tangent.normalize();
 
 			let mu = MathUtil.sqrt(
 				bodyA.staticFriction * bodyA.staticFriction + bodyB.staticFriction * bodyB.staticFriction
@@ -186,7 +157,7 @@ export class World {
 			const bodyA = manifold.bodyA;
 			const bodyB = manifold.bodyB;
 
-			let correction = MathUtil.max(0, manifold.penetrationDepth - PENETRATION_ALLOWANCE) * 0.8
+			const correction = MathUtil.max(0, manifold.penetrationDepth - PENETRATION_ALLOWANCE) * 0.8
 				/ (bodyA.invMass + bodyB.invMass);
 
 			if (bodyA.canMove()) {
@@ -204,9 +175,6 @@ export class World {
 				return new BoxCollider(SHAPE_BOX, body);
 			case SHAPE_SPHERE:
 				return new SphereCollider(SHAPE_SPHERE, body);
-			case SHAPE_PLANE:
-				return new PlaneCollider(SHAPE_PLANE, body);
 		}
 	}
-
 }

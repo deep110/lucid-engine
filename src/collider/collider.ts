@@ -1,5 +1,5 @@
 import { RigidBody } from "../core/rigidbody";
-import { Mat33 } from "../math/mat33";
+import { Mat33 } from "../math/index";
 
 export class Collider {
 	shape: number;

@@ -131,15 +131,14 @@ export class Vec3 {
 	}
 
 	normalize() {
-		const invLength = 1 / this.length();
-		return this.iscale(invLength);
-	}
-
-	safeNormalize() {
-		let len = this.length();
+		let len = this.x * this.x + this.y * this.y + this.z * this.z;
 		if (len > ZERO_THRESHOLD) {
-			this.iscale(1 / len);
+			len = 1 / MathUtil.sqrt(len);
 		}
+		this.x *= len;
+		this.y *= len;
+		this.z *= len;
+
 		return this;
 	}
 

@@ -1,3 +1,4 @@
+import { Quaternion } from "./quat";
 import { Vec3 } from "./vec3";
 
 export class Mat33 {
@@ -12,7 +13,7 @@ export class Mat33 {
         e10: number, e11: number, e12: number,
         e20: number, e21: number, e22: number
     ) {
-        var te = this.elements;
+        const te = this.elements;
         te[0] = e00; te[1] = e01; te[2] = e02;
         te[3] = e10; te[4] = e11; te[5] = e12;
         te[6] = e20; te[7] = e21; te[8] = e22;
@@ -27,7 +28,7 @@ export class Mat33 {
     }
 
     invert() {
-        var tm = this.elements;
+        const tm = this.elements;
         let a00 = tm[0], a10 = tm[3], a20 = tm[6],
         a01 = tm[1], a11 = tm[4], a21 = tm[7],
         a02 = tm[2], a12 = tm[5], a22 = tm[8],
@@ -60,7 +61,7 @@ export class Mat33 {
     }
 
     determinant() {
-        var te = this.elements;
+        const te = this.elements;
 
         return te[0] * te[4] * te[8] - te[0] * te[5] * te[7] - te[1] * te[3] * te[8] + te[1] * te[5] * te[6] 
             + te[2] * te[3] * te[7] - te[2] * te[4] * te[6];
@@ -74,10 +75,43 @@ export class Mat33 {
         return result;
     }
 
+
+    fromQuat(q: Quaternion) {
+        const x2 = q.x + q.x;
+        const y2 = q.y + q.y;
+        const z2 = q.z + q.z;
+
+        const xx = q.x * x2;
+        const yx = q.y * x2;
+        const yy = q.y * y2;
+        const zx = q.z * x2;
+        const zy = q.z * y2;
+        const zz = q.z * z2;
+        const wx = q.w * x2;
+        const wy = q.w * y2;
+        const wz = q.w * z2;
+
+        const out = this.elements;
+
+        out[0] = 1 - yy - zz;
+        out[3] = yx - wz;
+        out[6] = zx + wy;
+
+        out[1] = yx + wz;
+        out[4] = 1 - xx - zz;
+        out[7] = zy - wx;
+
+        out[2] = zx - wy;
+        out[5] = zy + wx;
+        out[8] = 1 - xx - yy;
+
+        return this;
+    }
+
     fromArray(array: number[], offset?: number) {
         if (offset === undefined) offset = 0;
 
-        for( var i = 0; i < 9; i ++ ) {
+        for(let i = 0; i < 9; i++) {
             this.elements[i] = array[i + offset];
         }
         return this;
