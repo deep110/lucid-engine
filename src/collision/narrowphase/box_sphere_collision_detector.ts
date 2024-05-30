@@ -1,4 +1,5 @@
 import { BoxCollider, Collider, SphereCollider } from "../../collider/index";
+import { EPSILON } from "../../constants";
 import { Manifold } from "../../core/manifold";
 import { Quaternion, Vec3 } from "../../math/index";
 import { CollisionDetector } from "./collision_detector";
@@ -44,6 +45,9 @@ export class BoxSphereCollisionDetector implements CollisionDetector {
             if (distanceSq == 0) {
                 // we can take normal direction to be vector between two centers
                 this.normal.copy(sphere.center).isub(box.center);
+                // if both box and sphere center is coinciding then normal will be zero
+                // hence pick and arbitrary direction
+                if (this.normal.lengthSq() < EPSILON) this.normal.set(0, 1, 0);
             } else {
                 // inverse transform this cuboid point
                 if (box.orientation.w != 1.0) {

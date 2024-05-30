@@ -1,5 +1,5 @@
 import { MathUtil } from "./utils";
-import { ZERO_THRESHOLD } from "../constants";
+import { EPSILON } from "../constants";
 
 export class Vec3 {
 	x: number;
@@ -132,7 +132,7 @@ export class Vec3 {
 
 	normalize() {
 		let len = this.x * this.x + this.y * this.y + this.z * this.z;
-		if (len > ZERO_THRESHOLD) {
+		if (len > EPSILON) {
 			len = 1 / MathUtil.sqrt(len);
 		}
 		this.x *= len;

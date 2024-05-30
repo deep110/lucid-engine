@@ -22,7 +22,7 @@ export class World {
 		if (!(params instanceof Object)) params = {};
 
 		this.timestep = params.timestep || 1 / 60;
-		this.iterations = params.iterations || 8;
+		this.iterations = params.iterations || 4;
 
 		// set gravity
 		this.gravity = new Vec3(0, -9.8, 0);
@@ -40,7 +40,11 @@ export class World {
 
 		// solve collisions
 		this.runImpulseSolver(collisions);
-		this.runPositionCorrectionSolver(collisions);
+
+		// for(let iteration=0; iteration < this.iterations; iteration++) {
+		// 	let strength = (iteration+1)/this.iterations;
+		// }
+		this.runPositionCorrectionSolver(collisions, 0.8);
 
 		for (let i = 0; i < this.rigidbodies.length; i++) {
 			const body = this.rigidbodies[i];
@@ -52,7 +56,7 @@ export class World {
 			body.move(this.timestep, this.linear_damping, this.angular_damping);
 
 			// reset force
-			body.reset_force();
+			body.resetForce();
 		}
 	}
 
@@ -61,7 +65,7 @@ export class World {
 	}
 
 	addRigidbody(bodyParams: RigidbodyParams) {
-		const rb = new RigidBody(bodyParams);
+		const rb = new RigidBody(bodyParams, this.rigidbodies.length);
 
 		const collider = this.createCollider(bodyParams.shape, rb);
 		if (collider == undefined) {
@@ -75,6 +79,11 @@ export class World {
 	}
 
 	removeRigidbody(rb: RigidBody) {
+		const index = rb.id;
+
+		this.rigidbodies[index] = this.rigidbodies[this.rigidbodies.length - 1];
+		this.rigidbodies[index].id = index;
+		this.rigidbodies.pop();
 	}
 
 	clear() {
@@ -150,14 +159,14 @@ export class World {
 	 *
 	 * @param collisions pairs of colliding rigidbodies
 	 */
-	private runPositionCorrectionSolver(collisions: Manifold[]) {
+	private runPositionCorrectionSolver(collisions: Manifold[], strength: number) {
 		for (let i = 0; i < collisions.length; i++) {
 			const manifold = collisions[i];
 
 			const bodyA = manifold.bodyA;
 			const bodyB = manifold.bodyB;
 
-			const correction = MathUtil.max(0, manifold.penetrationDepth - PENETRATION_ALLOWANCE) * 0.8
+			const correction = MathUtil.max(0, manifold.penetrationDepth - PENETRATION_ALLOWANCE) * strength
 				/ (bodyA.invMass + bodyB.invMass);
 
 			if (bodyA.canMove()) {

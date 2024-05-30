@@ -61,7 +61,7 @@ function initializeScene() {
 	geometries["box"] = new THREE.BoxGeometry(1, 1, 1);
 	geometries["cylinder"] = new THREE.CylinderGeometry(2, 2, 5, 32);
 
-	materials["sphere"] = new THREE.MeshStandardMaterial({ color: 0xff0000, wireframe: true });
+	materials["sphere"] = new THREE.MeshStandardMaterial({ color: 0xff0000, wireframe: false });
 	materials["box"] = new THREE.MeshStandardMaterial({ color: basicTexture(3), wireframe: false });
 	materials["cylinder"] = new THREE.MeshStandardMaterial({ color: 0xff0000 });
 
@@ -97,9 +97,9 @@ function onWindowResize() {
 function populate(type) {
 	var x, y, z, w, h, d;
 
-	for (let i = 0; i < 1000; i++) {
+	for (let i = 0; i < 10; i++) {
 		x = -5 + Math.random()*10;
-		y = 3 + Math.random()*20;
+		y = 20 + Math.random()*20;
 		z = -5 + Math.random()*30;
 		w = 5 + Math.random()*10;
 		h = 5 + Math.random()*10;
@@ -137,6 +137,7 @@ function update() {
 	// update physics
 	if (isSimulating) {
 		world.step();
+		removeOOSBodies();
 	}
 
 	stats.end();
@@ -196,6 +197,19 @@ function addGround() {
 	// const plane = new THREE.Mesh( geometry, material );
 	// plane.rotation.x = -Math.PI/2;
 	// scene.add( plane );
+}
+
+function removeOOSBodies() {
+	for (var i = objects.length - 1; i > -1; i--) {
+		var object = objects[i];
+
+		var position = object.body.getPosition();
+		if (object.body.canMove() && position.y < -150) {
+			world.removeRigidbody(object.body);
+			objects.splice(i, 1);
+			scene.remove(object);
+		}
+	}
 }
 
 

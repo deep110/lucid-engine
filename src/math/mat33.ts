@@ -75,39 +75,6 @@ export class Mat33 {
         return result;
     }
 
-
-    fromQuat(q: Quaternion) {
-        const x2 = q.x + q.x;
-        const y2 = q.y + q.y;
-        const z2 = q.z + q.z;
-
-        const xx = q.x * x2;
-        const yx = q.y * x2;
-        const yy = q.y * y2;
-        const zx = q.z * x2;
-        const zy = q.z * y2;
-        const zz = q.z * z2;
-        const wx = q.w * x2;
-        const wy = q.w * y2;
-        const wz = q.w * z2;
-
-        const out = this.elements;
-
-        out[0] = 1 - yy - zz;
-        out[3] = yx - wz;
-        out[6] = zx + wy;
-
-        out[1] = yx + wz;
-        out[4] = 1 - xx - zz;
-        out[7] = zy - wx;
-
-        out[2] = zx - wy;
-        out[5] = zy + wx;
-        out[8] = 1 - xx - yy;
-
-        return this;
-    }
-
     fromArray(array: number[], offset?: number) {
         if (offset === undefined) offset = 0;
 

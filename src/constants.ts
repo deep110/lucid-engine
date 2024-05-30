@@ -14,4 +14,4 @@ export const SHAPE_POLYGON = 4;
 // AABB approximation
 export const AABB_PROX = 0.005;
 export const PENETRATION_ALLOWANCE = 0.01;
-export const ZERO_THRESHOLD = 0.000001
+export const EPSILON = 0.0001

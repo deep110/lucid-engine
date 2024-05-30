@@ -1,5 +1,5 @@
 import { MathUtil, Vec3, Quaternion, Mat33 } from "../math/index";
-import { BODY_DYNAMIC, BODY_STATIC, ZERO_THRESHOLD } from "../constants";
+import { BODY_DYNAMIC, BODY_STATIC, EPSILON } from "../constants";
 import { Collider } from "../collider/index";
 
 
@@ -18,7 +18,7 @@ export type RigidbodyParams = {
 
 
 export class RigidBody {
-	id: string;
+	id: number;
 	type: number;
 	shape: number;
 
@@ -43,8 +43,8 @@ export class RigidBody {
 	// collider
 	collider?: Collider;
 
-	constructor(params: RigidbodyParams) {
-		this.id = MathUtil.generateUUID();
+	constructor(params: RigidbodyParams, id: number) {
+		this.id = id;
 		this.shape = params.shape;
 		this.position = new Vec3();
 		this.rotation = new Quaternion();
@@ -143,7 +143,7 @@ export class RigidBody {
 		// not so straight forward since angular velocity is Vec3 and rotation is Quaternion
 		// https://gafferongames.com/post/physics_in_3d/
 		const halfAngle = this.angularVelocity.length() * 0.5;
-		if (halfAngle > ZERO_THRESHOLD) {
+		if (halfAngle > EPSILON) {
 			// convert angular velocity to Quaternion
 			const rotationAxis = this.angularVelocity.clone().normalize();
 			const angularVelocityQuat = new Quaternion().fromAxisAngle(rotationAxis, halfAngle);
@@ -157,7 +157,7 @@ export class RigidBody {
 		this.collider?.update(this);
 	}
 
-	reset_force() {
+	resetForce() {
 		this.netForce.reset();
 		this.netTorque.reset();
 	}

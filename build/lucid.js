@@ -17,7 +17,7 @@
     // AABB approximation
     const AABB_PROX = 0.005;
     const PENETRATION_ALLOWANCE = 0.01;
-    const ZERO_THRESHOLD = 0.000001;
+    const EPSILON = 0.0001;
 
     const MathUtil = {
         abs: Math.abs,
@@ -170,7 +170,7 @@
         }
         normalize() {
             let len = this.x * this.x + this.y * this.y + this.z * this.z;
-            if (len > ZERO_THRESHOLD) {
+            if (len > EPSILON) {
                 len = 1 / MathUtil.sqrt(len);
             }
             this.x *= len;
@@ -431,31 +431,6 @@
             result.z = v.x * this.elements[2] + v.y * this.elements[5] + v.z * this.elements[8];
             return result;
         }
-        fromQuat(q) {
-            const x2 = q.x + q.x;
-            const y2 = q.y + q.y;
-            const z2 = q.z + q.z;
-            const xx = q.x * x2;
-            const yx = q.y * x2;
-            const yy = q.y * y2;
-            const zx = q.z * x2;
-            const zy = q.z * y2;
-            const zz = q.z * z2;
-            const wx = q.w * x2;
-            const wy = q.w * y2;
-            const wz = q.w * z2;
-            const out = this.elements;
-            out[0] = 1 - yy - zz;
-            out[3] = yx - wz;
-            out[6] = zx + wy;
-            out[1] = yx + wz;
-            out[4] = 1 - xx - zz;
-            out[7] = zy - wx;
-            out[2] = zx - wy;
-            out[5] = zy + wx;
-            out[8] = 1 - xx - yy;
-            return this;
-        }
         fromArray(array, offset) {
             if (offset === undefined)
                 offset = 0;
@@ -467,8 +442,8 @@
     }
 
     class RigidBody {
-        constructor(params) {
-            this.id = MathUtil.generateUUID();
+        constructor(params, id) {
+            this.id = id;
             this.shape = params.shape;
             this.position = new Vec3();
             this.rotation = new Quaternion();
@@ -545,7 +520,7 @@
             // not so straight forward since angular velocity is Vec3 and rotation is Quaternion
             // https://gafferongames.com/post/physics_in_3d/
             const halfAngle = this.angularVelocity.length() * 0.5;
-            if (halfAngle > ZERO_THRESHOLD) {
+            if (halfAngle > EPSILON) {
                 // convert angular velocity to Quaternion
                 const rotationAxis = this.angularVelocity.clone().normalize();
                 const angularVelocityQuat = new Quaternion().fromAxisAngle(rotationAxis, halfAngle);
@@ -556,7 +531,7 @@
             // update collider
             (_a = this.collider) === null || _a === void 0 ? void 0 : _a.update(this);
         }
-        reset_force() {
+        resetForce() {
             this.netForce.reset();
             this.netTorque.reset();
         }
@@ -631,6 +606,7 @@
     class SphereSphereCollisionDetector {
         constructor() {
             this.distance = new Vec3();
+            this.zeroNormal = new Vec3(0, 1, 0);
         }
         detectCollision(colliderA, colliderB, manifold) {
             const sphereA = colliderA;
@@ -638,9 +614,16 @@
             // distance between their centers should be less than sum of radii
             const rSum = sphereA.radius + sphereB.radius;
             this.distance.copy(sphereB.center).isub(sphereA.center);
-            if (this.distance.lengthSq() < rSum * rSum) {
+            const distanceSq = this.distance.lengthSq();
+            if (distanceSq < rSum * rSum) {
                 manifold.hasCollision = true;
-                manifold.update(this.distance, rSum - this.distance.length());
+                if (distanceSq > EPSILON) {
+                    manifold.update(this.distance, rSum - MathUtil.sqrt(distanceSq));
+                }
+                else {
+                    // handle case when distance is almost zero or close to zero
+                    manifold.update(this.zeroNormal, Math.min(sphereA.radius, sphereB.radius));
+                }
             }
         }
     }
@@ -674,6 +657,10 @@
                 if (distanceSq == 0) {
                     // we can take normal direction to be vector between two centers
                     this.normal.copy(sphere.center).isub(box.center);
+                    // if both box and sphere center is coinciding then normal will be zero
+                    // hence pick and arbitrary direction
+                    if (this.normal.lengthSq() < EPSILON)
+                        this.normal.set(0, 1, 0);
                 }
                 else {
                     // inverse transform this cuboid point
@@ -744,7 +731,7 @@
             if (!(params instanceof Object))
                 params = {};
             this.timestep = params.timestep || 1 / 60;
-            this.iterations = params.iterations || 8;
+            this.iterations = params.iterations || 4;
             // set gravity
             this.gravity = new Vec3(0, -9.8, 0);
             if (params.gravity !== undefined)
@@ -759,7 +746,10 @@
             const collisions = this.narrow_phase_solver.solve(this.rigidbodies);
             // solve collisions
             this.runImpulseSolver(collisions);
-            this.runPositionCorrectionSolver(collisions);
+            // for(let iteration=0; iteration < this.iterations; iteration++) {
+            // 	let strength = (iteration+1)/this.iterations;
+            // }
+            this.runPositionCorrectionSolver(collisions, 0.8);
             for (let i = 0; i < this.rigidbodies.length; i++) {
                 const body = this.rigidbodies[i];
                 // calculate net force on body, right now it is just gravity
@@ -767,14 +757,14 @@
                 // move the body due to force or impulse during collision
                 body.move(this.timestep, this.linear_damping, this.angular_damping);
                 // reset force
-                body.reset_force();
+                body.resetForce();
             }
         }
         setGravity(grArr) {
             this.gravity.fromArray(grArr);
         }
         addRigidbody(bodyParams) {
-            const rb = new RigidBody(bodyParams);
+            const rb = new RigidBody(bodyParams, this.rigidbodies.length);
             const collider = this.createCollider(bodyParams.shape, rb);
             if (collider == undefined) {
                 console.error("Collider of shape: ", bodyParams.shape, " cannot be created");
@@ -785,6 +775,10 @@
             return rb;
         }
         removeRigidbody(rb) {
+            const index = rb.id;
+            this.rigidbodies[index] = this.rigidbodies[this.rigidbodies.length - 1];
+            this.rigidbodies[index].id = index;
+            this.rigidbodies.pop();
         }
         clear() {
             this.rigidbodies = [];
@@ -840,12 +834,12 @@
          *
          * @param collisions pairs of colliding rigidbodies
          */
-        runPositionCorrectionSolver(collisions) {
+        runPositionCorrectionSolver(collisions, strength) {
             for (let i = 0; i < collisions.length; i++) {
                 const manifold = collisions[i];
                 const bodyA = manifold.bodyA;
                 const bodyB = manifold.bodyB;
-                const correction = MathUtil.max(0, manifold.penetrationDepth - PENETRATION_ALLOWANCE) * 0.8
+                const correction = MathUtil.max(0, manifold.penetrationDepth - PENETRATION_ALLOWANCE) * strength
                     / (bodyA.invMass + bodyB.invMass);
                 if (bodyA.canMove()) {
                     bodyA.position.subScaledVector(manifold.collisionNormal, bodyA.invMass * correction);
@@ -869,6 +863,7 @@
     exports.BODY_DYNAMIC = BODY_DYNAMIC;
     exports.BODY_KINEMATIC = BODY_KINEMATIC;
     exports.BODY_STATIC = BODY_STATIC;
+    exports.EPSILON = EPSILON;
     exports.Mat33 = Mat33;
     exports.PENETRATION_ALLOWANCE = PENETRATION_ALLOWANCE;
     exports.Quaternion = Quaternion;
@@ -880,6 +875,5 @@
     exports.SHAPE_SPHERE = SHAPE_SPHERE;
     exports.Vec3 = Vec3;
     exports.World = World;
-    exports.ZERO_THRESHOLD = ZERO_THRESHOLD;
 
 }));
